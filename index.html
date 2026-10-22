@@ -5,13 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>THE HOLLYWOOD HACKER - 猛烈打鍵！ハリウッド・ハッカー</title>
-    <meta name="description" content="適当にキーボードを叩くだけで天才ハッカー！正しく打つな、激しく叩け。30秒間の映画風サイバータイピングゲーム。怒涛の連打と映画的な「間（タメ）」をAIが判定！" />
+    <meta name="description" content="【v2.0大型アップデート】適当にキーボードを叩くだけで天才ハッカー！正しく打つな、激しく叩け！…だが拍子（リズム）を外すな！二段式ビートハイウェイと内製シンセBGMが融合した30秒間の映画風サイバーリズム・タイピングゲーム。選べる3難易度＆AIハッカー適性診断！" />
 
     <!-- Open Graph Protocol (OGP) -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://stellates.github.io/hackhackhack/" />
-    <meta property="og:title" content="THE HOLLYWOOD HACKER - 猛烈打鍵！ハリウッド・ハッカー" />
-    <meta property="og:description" content="適当にキーボードを叩くだけで天才ハッカー！正しく打つな、激しく叩け。30秒間の映画風サイバータイピングゲーム。怒涛の連打と映画的な「間（タメ）」をAIが判定！" />
+    <meta property="og:title" content="THE HOLLYWOOD HACKER v2.0 - 猛烈打鍵！ハリウッド・ハッカー" />
+    <meta property="og:description" content="【v2.0大型アップデート】適当にキーボードを叩くだけで天才ハッカー！正しく打つな、激しく叩け！…だが拍子（リズム）を外すな！二段式ビートハイウェイと内製シンセBGMが融合した30秒間の映画風サイバーリズム・タイピングゲーム。選べる3難易度＆AIハッカー適性診断！" />
     <meta property="og:image" content="https://stellates.github.io/hackhackhack/ogp.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -21,8 +21,8 @@
     <!-- Twitter / X Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://stellates.github.io/hackhackhack/" />
-    <meta name="twitter:title" content="THE HOLLYWOOD HACKER - 猛烈打鍵！ハリウッド・ハッカー" />
-    <meta name="twitter:description" content="適当にキーボードを叩くだけで天才ハッカー！正しく打つな、激しく叩け。30秒間の映画風サイバータイピングゲーム。怒涛の連打と映画的な「間（タメ）」をAIが判定！" />
+    <meta name="twitter:title" content="THE HOLLYWOOD HACKER v2.0 - 猛烈打鍵！ハリウッド・ハッカー" />
+    <meta name="twitter:description" content="【v2.0大型アップデート】適当にキーボードを叩くだけで天才ハッカー！正しく打つな、激しく叩け！…だが拍子（リズム）を外すな！二段式ビートハイウェイと内製シンセBGMが融合した30秒間の映画風サイバーリズム・タイピングゲーム。選べる3難易度＆AIハッカー適性診断！" />
     <meta name="twitter:image" content="https://stellates.github.io/hackhackhack/ogp.png" />
 
     <link rel="stylesheet" href="/src/style.css" />
@@ -39,16 +39,27 @@
       </div>
     </div>
 
+    <!-- 3-2-1 Countdown Overlay -->
+    <div id="countdown-overlay" class="countdown-overlay" style="display: none;">
+      <div class="countdown-box">
+        <div id="countdown-text" class="countdown-number">3</div>
+        <div class="countdown-sub">SYNCHRONIZING SYSTEM BEAT...</div>
+      </div>
+    </div>
+
     <div id="app">
       <!-- Top Header -->
       <header class="system-header">
         <div class="header-left">
           <div class="brand-badge">
             <span class="status-indicator"></span>
-            <span>HOLLYWOOD_HACKER::v2.4</span>
+            <span>HOLLYWOOD_HACKER::v2.0</span>
           </div>
           <div class="target-info">
             TARGET: <strong>MAINFRAME://SECURE_VAULT_07</strong>
+          </div>
+          <div id="header-diff-badge" class="header-diff-badge diff-normal">
+            NORMAL
           </div>
         </div>
 
@@ -64,18 +75,24 @@
             </div>
             <span id="progress-text" class="progress-text">0%</span>
           </div>
+
+          <!-- Rhythm Sync Meter -->
+          <div class="sync-container">
+            <span class="sync-label">SYNC:</span>
+            <span id="sync-val" class="sync-val">100%</span>
+          </div>
         </div>
 
         <div class="header-right">
           <button id="btn-sound-toggle" class="btn-icon" title="音声ミュート切替">
-            🔊 SOUND: ON
+            🔊 BGM & SFX: ON
           </button>
         </div>
       </header>
 
       <!-- Main Workspace Grid -->
       <main class="workspace-grid">
-        <!-- Main Terminal 01 -->
+        <!-- Main Terminal 01 with Cyber Rhythm Highway -->
         <section class="window-panel" id="main-terminal">
           <div class="window-titlebar">
             <div class="title-dots">
@@ -84,7 +101,44 @@
               <span class="title-dot dot-green"></span>
             </div>
             <div class="title-text">TERMINAL 01: PAYLOAD_INJECTOR.cpp [ROOT@CORE]</div>
-            <div class="title-status">STREAMING</div>
+            <div class="title-status" id="highway-status">BEAT SYNC: ACTIVE</div>
+          </div>
+
+          <!-- Cyber Dual Rhythm Highway (Top: SHIFT Lane, Bottom: MAIN Typing Lane) -->
+          <div class="rhythm-highway-container dual-highway" id="rhythm-highway">
+            <div class="rhythm-track-bg"></div>
+
+            <!-- Top Lane: SHIFT Sub-Highway -->
+            <div class="rhythm-sublane shift-lane" id="rhythm-shift-lane">
+              <span class="sublane-tag tag-shift">⇧ SHIFT</span>
+              <div class="rhythm-target-zone target-zone-shift" id="target-zone-shift">
+                <div class="target-bracket bracket-left">[</div>
+                <div class="target-bracket bracket-right">]</div>
+                <div class="target-line line-shift"></div>
+                <span class="target-label label-shift">SHIFT</span>
+              </div>
+              <div class="rhythm-notes-stream" id="rhythm-notes-shift"></div>
+            </div>
+
+            <!-- Bottom Lane: MAIN Highway (BURST / SPACE / ENTER) -->
+            <div class="rhythm-sublane main-lane" id="rhythm-main-lane">
+              <span class="sublane-tag tag-main">🎯 TYPING</span>
+              <div class="rhythm-target-zone target-zone-main" id="target-zone-main">
+                <div class="target-bracket bracket-left">[</div>
+                <div class="target-bracket bracket-right">]</div>
+                <div class="target-line line-main"></div>
+                <span class="target-label label-main">CRITICAL</span>
+              </div>
+              <div class="rhythm-notes-stream" id="rhythm-notes-main"></div>
+            </div>
+
+            <!-- Dynamic Judgment Popup -->
+            <div class="rhythm-judgment-pop" id="rhythm-judgment-pop"></div>
+            <!-- Current Phase Banner -->
+            <div class="current-phase-banner" id="phase-banner">
+              <span id="phase-icon">⚡</span>
+              <span id="phase-text">STANDBY: キーボードを構えろ！</span>
+            </div>
           </div>
           <div class="terminal-content" id="terminal-scroll-area">
             <div id="code-stream"></div>
@@ -152,37 +206,79 @@
           <span id="combo-value" class="combo-count">0</span>
           <span class="kps-label">KEYS:</span>
           <span id="keys-count" class="combo-count" style="color: #00ff88;">0</span>
+          <span class="kps-label" style="margin-left: 8px;">PENALTY:</span>
+          <span id="penalty-display" class="combo-count" style="color: #ff3366;">0</span>
         </div>
 
-        <!-- Mobile Quick Tap Button -->
-        <button id="mobile-hack-btn" class="mobile-hack-btn">
-          ⚡ RAPID HACK (連打)
-        </button>
+        <!-- Desktop Keyboard Guide (PCキーボード用ガイド) -->
+        <div class="desktop-key-guide">
+          <div class="key-guide-pill pill-any"><kbd>ANY KEY</kbd> 猛烈連打</div>
+          <div class="key-guide-pill pill-space"><kbd>SPACE</kbd> 防壁突破</div>
+          <div class="key-guide-pill pill-shift"><kbd>SHIFT</kbd> 加速バイパス</div>
+          <div class="key-guide-pill pill-enter"><kbd>ENTER</kbd> ペイロード強打!!</div>
+        </div>
+
+        <!-- Mobile Rhythm Buttons (スマホ時のみ表示) -->
+        <div class="mobile-controls-row">
+          <button id="mobile-hack-btn" class="mobile-btn mobile-hack-btn">
+            ⚡ 連打
+          </button>
+          <button id="mobile-space-btn" class="mobile-btn mobile-space-btn">
+            ␣ SPACE
+          </button>
+          <button id="mobile-shift-btn" class="mobile-btn mobile-shift-btn">
+            ⇧ SHIFT
+          </button>
+          <button id="mobile-enter-btn" class="mobile-btn mobile-enter-btn">
+            ↵ ENTER
+          </button>
+        </div>
       </footer>
 
       <!-- Start Screen Modal -->
       <div id="start-modal" class="modal-overlay">
         <div class="modal-card">
+          <div class="modal-badge">VERSION 2.0 // CYBER RHYTHM OVERDRIVE</div>
           <h1 class="modal-title">THE HOLLYWOOD HACKER</h1>
-          <p class="modal-subtitle">猛烈打鍵！ハリウッド・ハッカータイピング</p>
+          <p class="modal-subtitle">猛烈打鍵 × サイバーリズムハッキング</p>
 
           <div class="instructions-box">
-            <p><strong>【ゲームルール】</strong></p>
+            <p><strong>【ゲームルール & 操作方法】</strong></p>
             <ul>
-              <li><strong>制限時間: 30秒</strong></li>
-              <li><strong>キーボードを猛烈に叩け！</strong> 正確に入力する必要は一切ありません。</li>
-              <li>激しい連打、怒涛の打鍵速度、そして時折スッと手を止める<strong>「劇的なタメ（間）」</strong>をAIが評価！</li>
-              <li>打鍵に合わせて本物さながらのコードとログが激流のように画面を埋め尽くします。</li>
-              <li>ハッキング終了後、あなたの<strong>「ハッカー適性」</strong>と<strong>「面白称号・ツッコミ寸評」</strong>を判定！</li>
-              <li>結果は<strong>高画質認定証PNG画像</strong>としてワンクリックで保存可能です。</li>
+              <li><strong>開始時に「3・2・1・HACK!!」のカウントダウン</strong>が入ります。心の準備を整えよう！</li>
+              <li>BPM 128のサイバーBGMに合わせて、右から左の照準枠へノーツが流れてきます。</li>
+              <li><span style="color:#00ff88;">⚡ 連打ゾーン (BURST)</span>: 帯が照準枠を通過中、<strong>キーボードを猛烈に叩きまくれ！</strong></li>
+              <li><span style="color:#ffd700;">␣ SPACE (FIREWALL BREAK)</span>: 照準枠に重なった瞬間に <strong>Spaceキー</strong> を押せ！</li>
+              <li><span style="color:#cc44ff;">⇧ SHIFT (FREQUENCY BOOST)</span>: 照準枠に重なった瞬間に <strong>Shiftキー</strong> を押せ！</li>
+              <li><span style="color:#ff3366;">↵ ENTER (CRITICAL SLAM)</span>: 節目に迫る特大ノーツ！照準枠で <strong>Enterキーを強打</strong> しろ！</li>
+              <li>※指定と違うキーを叩くとペナルティ減点。映画のハッカーのようにリズムと怒涛の打鍵でSSSを狙え！</li>
             </ul>
+          </div>
+
+          <!-- Difficulty Selector -->
+          <div class="difficulty-select-container">
+            <span class="difficulty-label">MISSION DIFFICULTY [難易度選択]:</span>
+            <div class="difficulty-buttons" id="diff-selector">
+              <button type="button" class="diff-btn diff-btn-easy" data-diff="EASY">
+                <span class="diff-title">EASY</span>
+                <span class="diff-desc">初級 / ゆったりノーツ</span>
+              </button>
+              <button type="button" class="diff-btn diff-btn-normal active" data-diff="NORMAL">
+                <span class="diff-title">NORMAL</span>
+                <span class="diff-desc">中級 / 本格ビート (標準)</span>
+              </button>
+              <button type="button" class="diff-btn diff-btn-hard" data-diff="HARD">
+                <span class="diff-title">HARD</span>
+                <span class="diff-desc">上級 / 神速16分トリル</span>
+              </button>
+            </div>
           </div>
 
           <button id="btn-start-game" class="btn-primary">
             🚀 侵入を開始する (START HACKING)
           </button>
           <p style="font-size: 11px; color: var(--text-dim); margin-top: 14px;">
-            ※任意のキーを押すか、ボタンをクリックすると開始します（音声が有効になります）
+            ※クリックまたはキー入力で「3・2・1」のカウントダウン後に侵入が始まります
           </p>
         </div>
       </div>
@@ -191,33 +287,44 @@
       <div id="result-modal" class="modal-overlay" style="display: none;">
         <div class="modal-card">
           <h1 class="modal-title" style="color: #00ff88;">ACCESS GRANTED</h1>
-          <p class="modal-subtitle" style="color: #00ffff;">MAINFRAME CORE BREACH COMPLETE</p>
+          <p class="modal-subtitle" style="color: #00ffff;">MAINFRAME CORE BREACH COMPLETE // MISSION EVALUATION</p>
+          <div id="result-diff-badge" class="result-diff-badge diff-normal">
+            DIFFICULTY: NORMAL MODE
+          </div>
 
           <div class="result-rank-container">
             <div id="result-rank" class="result-rank-badge">SSS</div>
             <div class="result-score-box">
               <div style="font-size: 12px; color: var(--text-dim);">HACKER APTITUDE SCORE</div>
               <div id="result-score" class="result-score-num">94,820 PTS</div>
-              <div id="result-tag" style="color: var(--primary-color); font-size: 12px; margin-top: 4px;">[ CINEMATIC MASTER ]</div>
+              <div id="result-tag" style="color: var(--primary-color); font-size: 12px; margin-top: 4px;">[ CYBER MAESTRO ]</div>
             </div>
           </div>
 
           <div id="result-title-banner" class="result-title-banner">
-            ハリウッド公認・劇場型天才ハッカー
+            神速サイバーマエストロ（完全調律クラッカー）
           </div>
 
           <div class="result-stats-grid">
             <div class="result-stat-card">
-              <div class="stat-card-label">PEAK SPEED (最高瞬間速度)</div>
+              <div class="stat-card-label">SYNC RATE (リズム同期率)</div>
+              <div id="stat-sync-rate" class="stat-card-val" style="color: #00ff88;">98%</div>
+            </div>
+            <div class="result-stat-card">
+              <div class="stat-card-label">PERFECT / GREAT / GOOD</div>
+              <div id="stat-rhythm-hits" class="stat-card-val">7 / 1 / 0</div>
+            </div>
+            <div class="result-stat-card">
+              <div class="stat-card-label">MISS / PENALTIES (ミス・誤打鍵)</div>
+              <div id="stat-penalties" class="stat-card-val" style="color: #ff5577;">0 / 0</div>
+            </div>
+            <div class="result-stat-card">
+              <div class="stat-card-label">PEAK SPEED (瞬間最高速度)</div>
               <div id="stat-peak-kps" class="stat-card-val">16.4 Keys/s</div>
             </div>
             <div class="result-stat-card">
-              <div class="stat-card-label">AVERAGE SPEED (平均打鍵速度)</div>
-              <div id="stat-avg-kps" class="stat-card-val">9.2 Keys/s</div>
-            </div>
-            <div class="result-stat-card">
               <div class="stat-card-label">DRAMATIC PAUSE (劇的タメ)</div>
-              <div id="stat-pauses" class="stat-card-val">4 回</div>
+              <div id="stat-pauses" class="stat-card-val">2 回</div>
             </div>
             <div class="result-stat-card">
               <div class="stat-card-label">ENTER SMASH (Enter強打)</div>
@@ -226,7 +333,7 @@
           </div>
 
           <div id="result-roast" class="result-roast-box">
-            猛烈な連打の後にスッと手を止め、「…ビンゴ」と呟くあの間（タメ）が完璧。全米映画協会からスカウトが来ます。
+            怒涛の連打と完璧な拍子取り！もはやハッキングではなくサイバー空間のオーケストラ指揮者。全米がスタンディングオベーションを送っています！
           </div>
 
           <div class="modal-actions">
@@ -234,7 +341,10 @@
               📥 認定証PNGを保存
             </button>
             <button id="btn-restart" class="btn-secondary">
-              🔄 もう一度ハックする
+              🔄 同じ難易度で再挑戦
+            </button>
+            <button id="btn-change-diff" class="btn-secondary btn-highlight">
+              🎚️ 難易度を変更する
             </button>
             <button id="btn-share-copy" class="btn-secondary">
               📋 結果をコピー

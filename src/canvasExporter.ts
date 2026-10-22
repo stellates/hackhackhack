@@ -96,6 +96,18 @@ export function generateReportCardCanvas(metrics: TypingMetrics): HTMLCanvasElem
   ctx.font = '900 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillText('THE HOLLYWOOD HACKER', margin + 30, margin + 110);
 
+  // Difficulty badge on certificate
+  const diff = metrics.difficulty || 'NORMAL';
+  let diffBadgeColor = '#00e5ff';
+  if (diff === 'EASY') diffBadgeColor = '#00ff88';
+  else if (diff === 'HARD') diffBadgeColor = '#ff0055';
+
+  ctx.fillStyle = diffBadgeColor;
+  ctx.font = 'bold 13px "Courier New", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(`[ DIFFICULTY: ${diff} MODE ]`, width - margin - 30, margin + 110);
+  ctx.textAlign = 'left';
+
   ctx.fillStyle = '#00ff88';
   ctx.font = 'bold 14px "Courier New", monospace';
   ctx.fillText('MISSION DEBRIEFING & APTITUDE CERTIFICATION', margin + 30, margin + 135);
@@ -172,14 +184,16 @@ export function generateReportCardCanvas(metrics: TypingMetrics): HTMLCanvasElem
   ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.fillText(metrics.title, rightX + 16, rankBoxY + 52);
 
-  // Metrics Grid (4 items)
-  const metricY = rankBoxY + 80;
+  // Metrics Grid (6 items in 2x3 grid)
+  const metricY = rankBoxY + 76;
   const gridW = (rightW - 15) / 2;
-  const gridH = 68;
+  const gridH = 54;
 
   const stats = [
-    { label: 'PEAK SPEED (瞬間打鍵速度)', val: `${metrics.peakKps} Keys/s` },
-    { label: 'AVERAGE SPEED (平均打鍵速度)', val: `${metrics.avgKps} Keys/s` },
+    { label: 'SYNC RATE (同期率)', val: `${metrics.syncRate}%` },
+    { label: 'PEAK / AVG SPEED', val: `${metrics.peakKps} / ${metrics.avgKps} KPS` },
+    { label: 'PERFECT / GREAT', val: `${metrics.perfectCount} / ${metrics.greatCount}` },
+    { label: 'MISS / PENALTY', val: `${metrics.missCount} / ${metrics.penaltyCount}` },
     { label: 'DRAMATIC PAUSE (劇的タメ)', val: `${metrics.dramaticPauses} 回` },
     { label: 'ENTER SMASH (Enter強打)', val: `${metrics.enterHits} 回` }
   ];
@@ -188,7 +202,7 @@ export function generateReportCardCanvas(metrics: TypingMetrics): HTMLCanvasElem
     const col = idx % 2;
     const row = Math.floor(idx / 2);
     const boxX = rightX + col * (gridW + 15);
-    const boxY = metricY + row * (gridH + 12);
+    const boxY = metricY + row * (gridH + 8);
 
     ctx.fillStyle = 'rgba(10, 20, 30, 0.6)';
     ctx.fillRect(boxX, boxY, gridW, gridH);
@@ -196,31 +210,31 @@ export function generateReportCardCanvas(metrics: TypingMetrics): HTMLCanvasElem
     ctx.strokeRect(boxX, boxY, gridW, gridH);
 
     ctx.fillStyle = '#88a0b0';
-    ctx.font = '11px "Courier New", monospace';
-    ctx.fillText(st.label, boxX + 12, boxY + 22);
+    ctx.font = '10px "Courier New", monospace';
+    ctx.fillText(st.label, boxX + 10, boxY + 18);
 
     ctx.fillStyle = '#00ffff';
-    ctx.font = 'bold 20px "Courier New", monospace';
-    ctx.fillText(st.val, boxX + 12, boxY + 52);
+    ctx.font = 'bold 17px "Courier New", monospace';
+    ctx.fillText(st.val, boxX + 10, boxY + 42);
   });
 
   // Roast / Critique Box
-  const roastY = metricY + 2 * (gridH + 12) + 6;
-  const roastH = 88;
+  const roastY = metricY + 3 * (gridH + 8) + 4;
+  const roastH = 76;
   ctx.fillStyle = 'rgba(255, 51, 102, 0.08)';
   ctx.fillRect(rightX, roastY, rightW, roastH);
   ctx.strokeStyle = 'rgba(255, 51, 102, 0.3)';
   ctx.strokeRect(rightX, roastY, rightW, roastH);
 
   ctx.fillStyle = '#ff6688';
-  ctx.font = 'bold 12px "Courier New", monospace';
-  ctx.fillText('AI INTRUSION CRITIQUE (AIによるツッコミ寸評):', rightX + 16, roastY + 24);
+  ctx.font = 'bold 11px "Courier New", monospace';
+  ctx.fillText('AI INTRUSION CRITIQUE (AIによるツッコミ寸評):', rightX + 16, roastY + 20);
 
   ctx.fillStyle = '#e0e8f0';
-  ctx.font = '15px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.font = '14px -apple-system, BlinkMacSystemFont, sans-serif';
 
   // Wrap text to fit
-  wrapText(ctx, metrics.roast, rightX + 16, roastY + 52, rightW - 32, 22);
+  wrapText(ctx, metrics.roast, rightX + 16, roastY + 44, rightW - 32, 20);
 
   // 8. Footer Bar
   ctx.fillStyle = '#556677';

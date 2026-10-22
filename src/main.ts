@@ -2,21 +2,30 @@ import './style.css';
 import { sound } from './sound';
 import { HACKER_CODE_SNIPPETS, TERMINAL_LOGS, DRAMATIC_EVENTS, generateHexDumpLine } from './hackerData';
 import { evaluateTyping, TypingMetrics } from './evaluator';
+import { RhythmEngine, JudgmentFeedback, Difficulty } from './rhythmEngine';
 import { CyberRadar } from './radar';
 import { downloadReportCard } from './canvasExporter';
 
 enum GameState {
   START,
+  COUNTDOWN,
   PLAYING,
   FINISHED
 }
 
 class HollywoodHackerGame {
   private state: GameState = GameState.START;
+  private selectedDifficulty: Difficulty = 'NORMAL';
   private durationTotal: number = 30; // 30 seconds
   private timeLeft: number = 30;
   private timerIntervalId: number | null = null;
+  private animFrameId: number | null = null;
+  private countdownTimerId: number | null = null;
   private lastTimestamp: number = 0;
+
+  // Rhythm Engine
+  private rhythmEngine: RhythmEngine = new RhythmEngine('NORMAL');
+  private noteElements: Map<number, HTMLElement> = new Map();
 
   // Typing & Performance tracking
   private totalKeystrokes: number = 0;
@@ -51,9 +60,14 @@ class HollywoodHackerGame {
   private timerBox!: HTMLElement;
   private progressBar!: HTMLElement;
   private progressText!: HTMLElement;
+  private syncVal!: HTMLElement;
   private kpsValue!: HTMLElement;
   private comboValue!: HTMLElement;
   private keysCount!: HTMLElement;
+  private penaltyDisplay!: HTMLElement;
+  private headerDiffBadge!: HTMLElement;
+  private resultDiffBadge!: HTMLElement;
+  private diffButtons: HTMLButtonElement[] = [];
   private codeStream!: HTMLElement;
   private terminalScrollArea!: HTMLElement;
   private hexStream!: HTMLElement;
@@ -61,14 +75,28 @@ class HollywoodHackerGame {
   private eventBanner!: HTMLElement;
   private eventTitle!: HTMLElement;
   private eventSub!: HTMLElement;
+  private countdownOverlay!: HTMLElement;
+  private countdownText!: HTMLElement;
+  private targetZoneShift!: HTMLElement;
+  private targetZoneMain!: HTMLElement;
+  private rhythmNotesShift!: HTMLElement;
+  private rhythmNotesMain!: HTMLElement;
+  private rhythmJudgmentPop!: HTMLElement;
+  private phaseBanner!: HTMLElement;
+  private phaseIcon!: HTMLElement;
+  private phaseText!: HTMLElement;
   private startModal!: HTMLElement;
   private resultModal!: HTMLElement;
   private btnSoundToggle!: HTMLButtonElement;
   private btnStartGame!: HTMLButtonElement;
   private btnDownloadPng!: HTMLButtonElement;
   private btnRestart!: HTMLButtonElement;
+  private btnChangeDiff!: HTMLButtonElement;
   private btnShareCopy!: HTMLButtonElement;
   private mobileHackBtn!: HTMLButtonElement;
+  private mobileSpaceBtn!: HTMLButtonElement;
+  private mobileShiftBtn!: HTMLButtonElement;
+  private mobileEnterBtn!: HTMLButtonElement;
   private mainTerminal!: HTMLElement;
 
   constructor() {
@@ -83,9 +111,14 @@ class HollywoodHackerGame {
     this.timerBox = document.getElementById('timer-box')!;
     this.progressBar = document.getElementById('progress-bar')!;
     this.progressText = document.getElementById('progress-text')!;
+    this.syncVal = document.getElementById('sync-val')!;
     this.kpsValue = document.getElementById('kps-value')!;
     this.comboValue = document.getElementById('combo-value')!;
     this.keysCount = document.getElementById('keys-count')!;
+    this.penaltyDisplay = document.getElementById('penalty-display')!;
+    this.headerDiffBadge = document.getElementById('header-diff-badge')!;
+    this.resultDiffBadge = document.getElementById('result-diff-badge')!;
+    this.diffButtons = Array.from(document.querySelectorAll('.diff-btn')) as HTMLButtonElement[];
     this.codeStream = document.getElementById('code-stream')!;
     this.terminalScrollArea = document.getElementById('terminal-scroll-area')!;
     this.hexStream = document.getElementById('hex-stream')!;
@@ -93,14 +126,28 @@ class HollywoodHackerGame {
     this.eventBanner = document.getElementById('event-banner')!;
     this.eventTitle = document.getElementById('event-title')!;
     this.eventSub = document.getElementById('event-sub')!;
+    this.countdownOverlay = document.getElementById('countdown-overlay')!;
+    this.countdownText = document.getElementById('countdown-text')!;
+    this.targetZoneShift = document.getElementById('target-zone-shift')!;
+    this.targetZoneMain = document.getElementById('target-zone-main')!;
+    this.rhythmNotesShift = document.getElementById('rhythm-notes-shift')!;
+    this.rhythmNotesMain = document.getElementById('rhythm-notes-main')!;
+    this.rhythmJudgmentPop = document.getElementById('rhythm-judgment-pop')!;
+    this.phaseBanner = document.getElementById('phase-banner')!;
+    this.phaseIcon = document.getElementById('phase-icon')!;
+    this.phaseText = document.getElementById('phase-text')!;
     this.startModal = document.getElementById('start-modal')!;
     this.resultModal = document.getElementById('result-modal')!;
     this.btnSoundToggle = document.getElementById('btn-sound-toggle') as HTMLButtonElement;
     this.btnStartGame = document.getElementById('btn-start-game') as HTMLButtonElement;
     this.btnDownloadPng = document.getElementById('btn-download-png') as HTMLButtonElement;
     this.btnRestart = document.getElementById('btn-restart') as HTMLButtonElement;
+    this.btnChangeDiff = document.getElementById('btn-change-diff') as HTMLButtonElement;
     this.btnShareCopy = document.getElementById('btn-share-copy') as HTMLButtonElement;
     this.mobileHackBtn = document.getElementById('mobile-hack-btn') as HTMLButtonElement;
+    this.mobileSpaceBtn = document.getElementById('mobile-space-btn') as HTMLButtonElement;
+    this.mobileShiftBtn = document.getElementById('mobile-shift-btn') as HTMLButtonElement;
+    this.mobileEnterBtn = document.getElementById('mobile-enter-btn') as HTMLButtonElement;
     this.mainTerminal = document.getElementById('main-terminal')!;
   }
 
@@ -113,33 +160,44 @@ class HollywoodHackerGame {
   }
 
   private fillInitialBackgroundStreams(): void {
-    // Fill a few lines of hex memory
     for (let i = 0; i < 5; i++) {
       this.addHexLine();
     }
-    // Fill a few initial logs
     this.addLogLine("[SYS] Target connected: MAINFRAME::VAULT-07");
-    this.addLogLine("[NET] Proxy chain active: 7 hops routed");
-    this.addLogLine("[RDY] Press keys to start injection payload...");
+    this.addLogLine("[BGM] Procedural synth ready (BPM 132)");
+    this.addLogLine("[RDY] Press START to begin 3-second neural countdown...");
   }
 
   private setupEventListeners(): void {
-    // Sound toggle
+    // Sound & BGM toggle
     this.btnSoundToggle.addEventListener('click', () => {
       sound.init();
       const isMuted = sound.toggleMute();
-      this.btnSoundToggle.textContent = isMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
+      this.btnSoundToggle.textContent = isMuted ? '🔇 BGM & SFX: OFF' : '🔊 BGM & SFX: ON';
+    });
+
+    // Difficulty buttons
+    this.diffButtons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sound.init();
+        const diff = btn.dataset.diff as Difficulty;
+        if (diff) {
+          this.setDifficulty(diff);
+          sound.playLogBeep();
+        }
+      });
     });
 
     // Start Button
     this.btnStartGame.addEventListener('click', () => {
       sound.init();
-      this.startGame();
+      this.startCountdown();
     });
 
     // Global Key Listener
     window.addEventListener('keydown', (e: KeyboardEvent) => {
-      // Prevent browser default behavior for F5 or space scrolling during game
+      // Prevent browser default scrolling for space and tab during game
       if (this.state === GameState.PLAYING) {
         if (e.key === ' ' || e.key === 'Tab') {
           e.preventDefault();
@@ -148,24 +206,34 @@ class HollywoodHackerGame {
 
       if (this.state === GameState.START) {
         sound.init();
-        this.startGame();
+        this.startCountdown();
         return;
       }
 
       if (this.state === GameState.PLAYING) {
-        this.handleKeystroke(e.key === 'Enter');
+        this.handleKeystroke(e.key);
       }
     });
 
-    // Mobile hack button
+    // Mobile buttons
     this.mobileHackBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      if (this.state === GameState.START) {
-        sound.init();
-        this.startGame();
-      } else if (this.state === GameState.PLAYING) {
-        this.handleKeystroke(false);
-      }
+      this.handleInputFromUi('a');
+    });
+
+    this.mobileSpaceBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.handleInputFromUi(' ');
+    });
+
+    this.mobileShiftBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.handleInputFromUi('Shift');
+    });
+
+    this.mobileEnterBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.handleInputFromUi('Enter');
     });
 
     // Touch tap on main terminal area for mobile furious tapping
@@ -173,7 +241,7 @@ class HollywoodHackerGame {
       if (this.state === GameState.PLAYING) {
         e.preventDefault();
         sound.init();
-        this.handleKeystroke(false);
+        this.handleKeystroke('a');
       }
     }, { passive: false });
 
@@ -184,22 +252,32 @@ class HollywoodHackerGame {
       }
     });
 
-    // Restart Button
+    // Restart Button (Same Difficulty)
     this.btnRestart.addEventListener('click', () => {
       this.resetGame();
-      this.startGame();
+      this.startCountdown();
+    });
+
+    // Change Difficulty Button (Return to Level Selection)
+    this.btnChangeDiff.addEventListener('click', () => {
+      sound.init();
+      sound.playLogBeep();
+      this.resetGame();
+      this.resultModal.style.display = 'none';
+      this.startModal.style.display = 'flex';
     });
 
     // Share / Copy button
     this.btnShareCopy.addEventListener('click', () => {
       if (!this.currentMetrics) return;
-      const text = `【THE HOLLYWOOD HACKER】ハッカー適性診断\n` +
+      const text = `【THE HOLLYWOOD HACKER v2.0】ハッカー適性診断\n` +
         `ランク: ${this.currentMetrics.rank} (${this.currentMetrics.score.toLocaleString()} PTS)\n` +
         `称号: ${this.currentMetrics.title}\n` +
+        `同期率 (SYNC): ${this.currentMetrics.syncRate}%\n` +
+        `判定: PERFECT ${this.currentMetrics.perfectCount} / GREAT ${this.currentMetrics.greatCount} / MISS ${this.currentMetrics.missCount}\n` +
         `最高打鍵速度: ${this.currentMetrics.peakKps} Keys/s\n` +
-        `劇的タメ: ${this.currentMetrics.dramaticPauses}回 / Enter強打: ${this.currentMetrics.enterHits}回\n` +
         `寸評: ${this.currentMetrics.roast}\n` +
-        `#HollywoodHacker #ハッカータイピング`;
+        `#HollywoodHacker #ハッカー音ゲータイピング`;
 
       navigator.clipboard.writeText(text).then(() => {
         const orig = this.btnShareCopy.textContent;
@@ -211,37 +289,128 @@ class HollywoodHackerGame {
     });
   }
 
-  private startGame(): void {
-    if (this.state === GameState.PLAYING) return;
-    this.state = GameState.PLAYING;
+  public setDifficulty(diff: Difficulty): void {
+    this.selectedDifficulty = diff;
+    this.rhythmEngine.setDifficulty(diff);
+
+    // Update active button classes
+    this.diffButtons.forEach((b) => {
+      b.classList.toggle('active', b.dataset.diff === diff);
+    });
+
+    // Update header badge
+    if (this.headerDiffBadge) {
+      this.headerDiffBadge.textContent = diff;
+      this.headerDiffBadge.className = `header-diff-badge diff-${diff.toLowerCase()}`;
+    }
+  }
+
+  private handleInputFromUi(key: string): void {
+    if (this.state === GameState.START) {
+      sound.init();
+      this.startCountdown();
+    } else if (this.state === GameState.PLAYING) {
+      this.handleKeystroke(key);
+    }
+  }
+
+  // 3-2-1 Countdown before actual start to prevent surprise rush
+  private startCountdown(): void {
+    if (this.state !== GameState.START) return;
+    this.state = GameState.COUNTDOWN;
+
     this.startModal.style.display = 'none';
     this.resultModal.style.display = 'none';
+    this.countdownOverlay.style.display = 'flex';
 
+    let count = 3;
+    this.countdownText.textContent = count.toString();
+    this.countdownText.style.color = '#00ff88';
+    sound.playCountdownStep(count);
+
+    this.countdownTimerId = window.setInterval(() => {
+      count--;
+      if (count > 0) {
+        this.countdownText.textContent = count.toString();
+        sound.playCountdownStep(count);
+      } else if (count === 0) {
+        this.countdownText.textContent = 'HACK!!';
+        this.countdownText.style.color = '#ff0055';
+        sound.playCountdownStep(0);
+      } else {
+        if (this.countdownTimerId) {
+          clearInterval(this.countdownTimerId);
+          this.countdownTimerId = null;
+        }
+        this.countdownOverlay.style.display = 'none';
+        this.actualStartGame();
+      }
+    }, 750);
+  }
+
+  private actualStartGame(): void {
+    this.state = GameState.PLAYING;
     this.timeLeft = this.durationTotal;
     this.lastTimestamp = performance.now();
     this.triggeredEvents.clear();
     this.timerBox.classList.remove('timer-warning');
 
-    // Run game loop
+    // Reset rhythm engine with selected difficulty
+    this.rhythmEngine.setDifficulty(this.selectedDifficulty);
+    this.clearNoteElements();
+
+    // Start Procedural Cyberpunk BGM
+    sound.startBgm();
+
+    // Run game logic loop (50ms interval)
     this.timerIntervalId = window.setInterval(() => {
       this.updateTimer();
     }, 50);
+
+    // Run high-precision rhythm highway visual loop
+    this.startRhythmRenderLoop();
 
     // Initial audio blip
     sound.playLogBeep();
   }
 
-  private handleKeystroke(isEnter: boolean): void {
+  private startRhythmRenderLoop(): void {
+    const loop = () => {
+      if (this.state !== GameState.PLAYING) return;
+
+      const elapsed = this.durationTotal - this.timeLeft;
+      this.renderRhythmHighway(elapsed);
+      this.updatePhaseBanner(elapsed);
+
+      this.animFrameId = requestAnimationFrame(loop);
+    };
+    this.animFrameId = requestAnimationFrame(loop);
+  }
+
+  private handleKeystroke(key: string): void {
     const now = performance.now();
+    const isEnter = key === 'Enter';
+    const isShift = key === 'Shift';
+    const elapsed = this.durationTotal - this.timeLeft;
 
     // 1. Audio feedback
-    sound.playKeyClick(isEnter);
+    if (isShift) {
+      sound.playShiftHit();
+    } else {
+      sound.playKeyClick(isEnter);
+    }
 
-    // 2. Keystroke counts
+    // 2. Rhythm Precision Judgment
+    const judgment = this.rhythmEngine.handleKeyInput(elapsed, key);
+    if (judgment) {
+      this.processJudgmentFeedback(judgment);
+    }
+
+    // 3. Keystroke counts
     this.totalKeystrokes++;
     if (isEnter) this.enterHits++;
 
-    // 3. Combo tracking
+    // 4. Combo tracking
     this.currentCombo++;
     if (this.currentCombo > this.maxCombo) {
       this.maxCombo = this.currentCombo;
@@ -255,7 +424,7 @@ class HollywoodHackerGame {
       this.comboValue.textContent = '0';
     }, 1200);
 
-    // 4. KPS and Dramatic Pause calculation
+    // 5. KPS and Dramatic Pause calculation
     this.keyTimestamps.push(now);
     const oneSecAgo = now - 1000;
     while (this.keyTimestamps.length > 0 && this.keyTimestamps[0] < oneSecAgo) {
@@ -267,8 +436,7 @@ class HollywoodHackerGame {
     }
     this.kpsValue.textContent = this.currentKps.toFixed(1);
 
-    // Dramatic Pause Detection:
-    // If player had high speed (> 6 KPS) and stopped for 0.4s to 1.6s, count as a dramatic Hollywood pause!
+    // Dramatic Pause Detection (Quiet moment between intense bursts)
     if (this.lastKeyTime > 0) {
       const pauseDuration = (now - this.lastKeyTime) / 1000;
       if (this.wasHighSpeedBeforePause && pauseDuration >= 0.4 && pauseDuration <= 1.8) {
@@ -279,7 +447,7 @@ class HollywoodHackerGame {
     this.wasHighSpeedBeforePause = this.currentKps >= 6;
     this.lastKeyTime = now;
 
-    // 5. Visual Effects & Code Streaming
+    // 6. Visual Effects & Code Streaming
     this.streamHackerCode(isEnter ? 12 : 5);
     this.radar?.triggerActivity();
 
@@ -300,6 +468,272 @@ class HollywoodHackerGame {
     }
   }
 
+  private processJudgmentFeedback(j: JudgmentFeedback): void {
+    if (j.type === 'PERFECT') {
+      if (j.noteType === 'ENTER') {
+        sound.playKeyClick(true);
+        this.mainTerminal.classList.add('screen-shake-heavy');
+        setTimeout(() => this.mainTerminal.classList.remove('screen-shake-heavy'), 280);
+        this.streamHackerCode(25);
+        this.showJudgmentPop('💥 CRITICAL ENTER SLAM!! (+3000)', 'pop-perfect');
+      } else {
+        sound.playPerfectHit();
+        this.showJudgmentPop('PERFECT!!', 'pop-perfect');
+      }
+    } else if (j.type === 'GREAT') {
+      if (j.noteType === 'ENTER') {
+        sound.playKeyClick(true);
+        this.mainTerminal.classList.add('screen-shake-heavy');
+        setTimeout(() => this.mainTerminal.classList.remove('screen-shake-heavy'), 240);
+        this.streamHackerCode(18);
+        this.showJudgmentPop('💥 GREAT ENTER SLAM!! (+2000)', 'pop-great');
+      } else {
+        sound.playGreatHit();
+        this.showJudgmentPop('GREAT!', 'pop-great');
+      }
+    } else if (j.type === 'GOOD') {
+      sound.playLogBeep();
+      this.showJudgmentPop('GOOD', 'pop-good');
+    } else if (j.type === 'PENALTY') {
+      sound.playMissHit();
+      this.showJudgmentPop(j.message || 'PENALTY!', 'pop-penalty');
+      this.triggerPenaltyFlash();
+      this.currentCombo = 0;
+      this.comboValue.textContent = '0';
+      this.penaltyDisplay.textContent = this.rhythmEngine.penaltyCount.toString();
+    } else if (j.type === 'MISS') {
+      sound.playMissHit();
+      this.showJudgmentPop('MISS!', 'pop-miss');
+      this.currentCombo = 0;
+      this.comboValue.textContent = '0';
+    }
+
+    // Update real-time sync rate
+    const sync = this.rhythmEngine.getSyncRate();
+    this.syncVal.textContent = `${sync}%`;
+  }
+
+  private showJudgmentPop(text: string, className: string): void {
+    this.rhythmJudgmentPop.textContent = text;
+    this.rhythmJudgmentPop.className = `rhythm-judgment-pop show-pop ${className}`;
+
+    setTimeout(() => {
+      this.rhythmJudgmentPop.classList.remove('show-pop');
+    }, 450);
+  }
+
+  private triggerPenaltyFlash(): void {
+    this.mainTerminal.classList.add('penalty-flash');
+    setTimeout(() => {
+      this.mainTerminal.classList.remove('penalty-flash');
+    }, 280);
+  }
+
+  private renderRhythmHighway(elapsed: number): void {
+    const targetX = 104; // Center line of the target zone bracket (left 80px + 48/2)
+    const speed = this.rhythmEngine.scrollSpeed; // Scaled by difficulty (Easy: 260, Normal: 310, Hard: 370)
+    const highwayWidth = this.rhythmNotesMain.clientWidth || this.rhythmNotesShift.clientWidth || 600;
+
+    const notes = this.rhythmEngine.getNotes();
+    let isCurrentlyBurstActive = false;
+    let isEnterApproaching = false;
+    let isEnterReady = false;
+    let isShiftApproaching = false;
+    let isShiftReady = false;
+
+    for (const note of notes) {
+      let isVisible = false;
+      let el = this.noteElements.get(note.id);
+
+      if (note.type === 'BURST') {
+        const noteDuration = note.duration || 1;
+        const noteWidth = noteDuration * speed;
+        const noteStart = targetX + (note.targetTime - elapsed) * speed;
+        const noteRight = noteStart + noteWidth;
+
+        // Note is visible as long as its right end hasn't passed off-screen left, and left end is before screen right
+        isVisible = noteRight >= -40 && noteStart <= highwayWidth + 60 && !note.hit;
+
+        if (isVisible) {
+          if (!el) {
+            el = document.createElement('div');
+            el.className = 'rhythm-note-item note-type-burst';
+            el.innerHTML = `<span>⚡ ${note.label} [連打!!]</span>`;
+            this.rhythmNotesMain.appendChild(el);
+            this.noteElements.set(note.id, el);
+          }
+          el.style.width = `${Math.round(noteWidth)}px`;
+          el.style.transform = `translate3d(${Math.round(noteStart)}px, -50%, 0)`;
+
+          // Check if target zone is inside this active burst
+          if (noteStart <= targetX && noteRight >= targetX) {
+            isCurrentlyBurstActive = true;
+          }
+        }
+      } else if (note.lane === 'SHIFT') {
+        // SHIFT Note flowing on the Shift Sublane
+        const noteWidth = 78;
+        const noteCenter = targetX + (note.targetTime - elapsed) * speed;
+        const noteLeft = noteCenter - noteWidth / 2;
+
+        isVisible = noteLeft + noteWidth >= -40 && noteLeft <= highwayWidth + 60 && !note.hit && !note.judged && !note.missed;
+
+        if (isVisible) {
+          if (!el) {
+            el = document.createElement('div');
+            el.className = 'rhythm-note-item note-type-shift';
+            el.innerHTML = '<span>⇧ SHIFT</span>';
+            this.rhythmNotesShift.appendChild(el);
+            this.noteElements.set(note.id, el);
+          }
+          el.style.transform = `translate3d(${Math.round(noteLeft)}px, -50%, 0)`;
+
+          const dist = noteCenter - targetX;
+          if (dist > 0 && dist <= 200) {
+            isShiftApproaching = true;
+          }
+          if (Math.abs(dist) <= 35) {
+            isShiftReady = true;
+          }
+        }
+      } else {
+        // SPACE or ENTER note flowing on the Main Highway
+        const isEnterNote = note.type === 'ENTER';
+        const noteWidth = isEnterNote ? 116 : 86;
+        const noteCenter = targetX + (note.targetTime - elapsed) * speed;
+        const noteLeft = noteCenter - noteWidth / 2;
+
+        isVisible = noteLeft + noteWidth >= -40 && noteLeft <= highwayWidth + 60 && !note.hit && !note.judged && !note.missed;
+
+        if (isVisible) {
+          if (!el) {
+            el = document.createElement('div');
+            el.className = `rhythm-note-item note-type-${note.type.toLowerCase()}`;
+            if (note.type === 'SPACE') {
+              el.innerHTML = '<span>␣ SPACE</span>';
+            } else if (note.type === 'ENTER') {
+              el.innerHTML = '<span>↵ ENTER</span>';
+            }
+            this.rhythmNotesMain.appendChild(el);
+            this.noteElements.set(note.id, el);
+          }
+
+          el.style.transform = `translate3d(${Math.round(noteLeft)}px, -50%, 0)`;
+
+          if (isEnterNote) {
+            const dist = noteCenter - targetX;
+            if (dist > 0 && dist <= 280) {
+              isEnterApproaching = true;
+            }
+            if (Math.abs(dist) <= 45) {
+              isEnterReady = true;
+            }
+          }
+        }
+      }
+
+      // Immediately remove invisible or already judged notes to prevent any phantom lingering
+      if (!isVisible && el) {
+        el.remove();
+        this.noteElements.delete(note.id);
+      }
+    }
+
+    // Shift sublane target zone visual alert states
+    if (isShiftReady) {
+      this.targetZoneShift.className = 'rhythm-target-zone target-zone-shift shift-ready';
+    } else if (isShiftApproaching) {
+      this.targetZoneShift.className = 'rhythm-target-zone target-zone-shift shift-approaching';
+    } else {
+      this.targetZoneShift.className = 'rhythm-target-zone target-zone-shift';
+    }
+
+    // Main highway target zone visual alert states
+    if (isEnterReady) {
+      this.targetZoneMain.className = 'rhythm-target-zone target-zone-main enter-ready';
+    } else if (isEnterApproaching) {
+      this.targetZoneMain.className = 'rhythm-target-zone target-zone-main enter-approaching';
+    } else if (isCurrentlyBurstActive) {
+      this.targetZoneMain.className = 'rhythm-target-zone target-zone-main burst-active';
+    } else {
+      this.targetZoneMain.className = 'rhythm-target-zone target-zone-main';
+    }
+
+    // Update banner with dynamic instructions
+    this.updatePhaseBanner(elapsed, isEnterApproaching, isEnterReady, isCurrentlyBurstActive, isShiftApproaching);
+  }
+
+  private updatePhaseBanner(
+    elapsed: number,
+    isEnterApproaching: boolean = false,
+    isEnterReady: boolean = false,
+    isBurstActive: boolean = false,
+    isShiftApproaching: boolean = false
+  ): void {
+    // 0.0s ~ 2.0s: Warm-up lead-in period
+    if (elapsed < 2.0) {
+      const remainingLeadIn = Math.max(0, 2.0 - elapsed).toFixed(1);
+      this.phaseBanner.className = 'current-phase-banner';
+      this.phaseIcon.textContent = '🚀';
+      this.phaseText.textContent = `STANDBY: キーボードを構えろ！ 連打まで ${remainingLeadIn}秒...`;
+      return;
+    }
+
+    if (isEnterReady) {
+      this.phaseBanner.className = 'current-phase-banner phase-stealth-active';
+      this.phaseIcon.textContent = '💥';
+      this.phaseText.textContent = 'SLAM ENTER NOW!! [ENTER強打!!]';
+      return;
+    }
+
+    if (isEnterApproaching) {
+      this.phaseBanner.className = 'current-phase-banner phase-stealth-active';
+      this.phaseIcon.textContent = '⚠️';
+      this.phaseText.textContent = 'ENTER接近中: 照準枠でENTERを叩き込め！';
+      return;
+    }
+
+    if (isBurstActive) {
+      this.phaseBanner.className = 'current-phase-banner phase-burst-active';
+      if (isShiftApproaching) {
+        this.phaseIcon.textContent = '⚡⇧';
+        this.phaseText.textContent = 'BURST連打中!! ⇧ SHIFT接近: タイミングを合わせろ！';
+      } else {
+        this.phaseIcon.textContent = '⚡';
+        this.phaseText.textContent = 'BURST: 全キー猛烈連打中！！ (MASH ANY KEYS!)';
+      }
+      return;
+    }
+
+    // Show next upcoming target note countdown
+    const nextInfo = this.rhythmEngine.getNextApproachingNote(elapsed);
+    if (nextInfo && nextInfo.secondsAway <= 2.2) {
+      const sec = Math.max(0, nextInfo.secondsAway).toFixed(1);
+      this.phaseBanner.className = 'current-phase-banner';
+      if (nextInfo.note.type === 'SPACE') {
+        this.phaseIcon.textContent = '␣';
+        this.phaseText.textContent = `NEXT: SPACE [防壁突破] (あと ${sec}秒)`;
+      } else if (nextInfo.note.type === 'SHIFT') {
+        this.phaseIcon.textContent = '⇧';
+        this.phaseText.textContent = `NEXT: SHIFT [周波数加速] (あと ${sec}秒)`;
+      } else if (nextInfo.note.type === 'ENTER') {
+        this.phaseIcon.textContent = '↵';
+        this.phaseText.textContent = `NEXT: ENTER [ペイロード強打] (あと ${sec}秒)`;
+      }
+    } else {
+      this.phaseBanner.className = 'current-phase-banner';
+      this.phaseIcon.textContent = '🎯';
+      this.phaseText.textContent = 'TARGET: SPACE / SHIFT / ENTER を狙え！';
+    }
+  }
+
+  private clearNoteElements(): void {
+    for (const [, el] of this.noteElements) {
+      el.remove();
+    }
+    this.noteElements.clear();
+  }
+
   private streamHackerCode(charCount: number): void {
     const currentSnippet = HACKER_CODE_SNIPPETS[this.snippetIndex];
     const chunk = currentSnippet.slice(this.snippetCharIndex, this.snippetCharIndex + charCount);
@@ -313,7 +747,6 @@ class HollywoodHackerGame {
       this.snippetIndex = (this.snippetIndex + 1) % HACKER_CODE_SNIPPETS.length;
     }
 
-    // Keep scroll at bottom
     this.terminalScrollArea.scrollTop = this.terminalScrollArea.scrollHeight;
   }
 
@@ -346,7 +779,6 @@ class HollywoodHackerGame {
   }
 
   private showDramaticPauseNotice(): void {
-    // Subtle visual indicator for Hollywood Pause
     const flash = document.createElement('span');
     flash.style.position = 'absolute';
     flash.style.right = '20px';
@@ -355,7 +787,7 @@ class HollywoodHackerGame {
     flash.style.fontSize = '12px';
     flash.style.fontWeight = 'bold';
     flash.style.textShadow = '0 0 8px #ffff00';
-    flash.textContent = '★ DRAMATIC PAUSE BONUS! (+2500)';
+    flash.textContent = '★ DRAMATIC PAUSE BONUS! (+2000)';
     document.body.appendChild(flash);
     setTimeout(() => flash.remove(), 1000);
   }
@@ -366,6 +798,15 @@ class HollywoodHackerGame {
     this.lastTimestamp = now;
 
     this.timeLeft = Math.max(0, this.timeLeft - delta);
+    const elapsed = this.durationTotal - this.timeLeft;
+
+    // Check rhythm auto-misses
+    const misses = this.rhythmEngine.updateTime(elapsed);
+    if (misses.length > 0) {
+      for (const m of misses) {
+        this.processJudgmentFeedback(m);
+      }
+    }
 
     // Format mm:ss.ms
     const totalMs = Math.floor(this.timeLeft * 100);
@@ -374,8 +815,8 @@ class HollywoodHackerGame {
     this.timerDisplay.textContent = `00:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
 
     // Intrusion progress calculation (0 - 100%)
-    const timeProgress = (this.durationTotal - this.timeLeft) / this.durationTotal; // 0 to 1
-    const keyProgress = Math.min(1.0, this.totalKeystrokes / 180); // 180 keys for 100%
+    const timeProgress = (this.durationTotal - this.timeLeft) / this.durationTotal;
+    const keyProgress = Math.min(1.0, this.totalKeystrokes / 180);
     const combinedPercent = Math.min(100, Math.floor((timeProgress * 0.4 + keyProgress * 0.6) * 100));
 
     this.progressBar.style.width = `${combinedPercent}%`;
@@ -429,19 +870,31 @@ class HollywoodHackerGame {
       clearInterval(this.timerIntervalId);
       this.timerIntervalId = null;
     }
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
     this.state = GameState.FINISHED;
 
-    // Access granted triumphant sound!
+    // Stop BGM and play grand fanfare
+    sound.stopBgm();
     sound.playAccessGranted();
 
-    // Calculate metrics
+    // Calculate metrics with rhythm evaluation
     this.currentMetrics = evaluateTyping(
       this.totalKeystrokes,
       this.durationTotal,
       this.peakKps,
       this.dramaticPauses,
       this.enterHits,
-      this.maxCombo
+      this.maxCombo,
+      this.rhythmEngine.perfectCount,
+      this.rhythmEngine.greatCount,
+      this.rhythmEngine.goodCount,
+      this.rhythmEngine.missCount,
+      this.rhythmEngine.penaltyCount,
+      this.rhythmEngine.getSyncRate(),
+      this.selectedDifficulty
     );
 
     // Populate result modal
@@ -453,14 +906,21 @@ class HollywoodHackerGame {
     const scoreEl = document.getElementById('result-score')!;
     const tagEl = document.getElementById('result-tag')!;
     const titleEl = document.getElementById('result-title-banner')!;
+    const syncRateEl = document.getElementById('stat-sync-rate')!;
+    const rhythmHitsEl = document.getElementById('stat-rhythm-hits')!;
+    const penaltiesEl = document.getElementById('stat-penalties')!;
     const peakKpsEl = document.getElementById('stat-peak-kps')!;
-    const avgKpsEl = document.getElementById('stat-avg-kps')!;
     const pausesEl = document.getElementById('stat-pauses')!;
     const entersEl = document.getElementById('stat-enters')!;
     const roastEl = document.getElementById('result-roast')!;
 
+    // Update Difficulty badge in result modal
+    if (this.resultDiffBadge) {
+      this.resultDiffBadge.textContent = `DIFFICULTY: ${m.difficulty} MODE`;
+      this.resultDiffBadge.className = `result-diff-badge diff-${m.difficulty.toLowerCase()}`;
+    }
+
     rankEl.textContent = m.rank;
-    // Color rank based on level
     if (m.rank === 'SSS') rankEl.style.color = '#ffcc00';
     else if (m.rank === 'SS') rankEl.style.color = '#00ffff';
     else if (m.rank === 'S') rankEl.style.color = '#33ff77';
@@ -472,8 +932,11 @@ class HollywoodHackerGame {
     scoreEl.textContent = `${m.score.toLocaleString()} PTS`;
     tagEl.textContent = `[ ${m.styleTag} ]`;
     titleEl.textContent = `称号: ${m.title}`;
+
+    syncRateEl.textContent = `${m.syncRate}%`;
+    rhythmHitsEl.textContent = `${m.perfectCount} / ${m.greatCount} / ${this.rhythmEngine.goodCount}`;
+    penaltiesEl.textContent = `${m.missCount} / ${m.penaltyCount}`;
     peakKpsEl.textContent = `${m.peakKps} Keys/s`;
-    avgKpsEl.textContent = `${m.avgKps} Keys/s`;
     pausesEl.textContent = `${m.dramaticPauses} 回`;
     entersEl.textContent = `${m.enterHits} 回`;
     roastEl.textContent = m.roast;
@@ -486,6 +949,16 @@ class HollywoodHackerGame {
       clearInterval(this.timerIntervalId);
       this.timerIntervalId = null;
     }
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+    if (this.countdownTimerId) {
+      clearInterval(this.countdownTimerId);
+      this.countdownTimerId = null;
+    }
+    sound.stopBgm();
+
     this.state = GameState.START;
     this.timeLeft = this.durationTotal;
     this.totalKeystrokes = 0;
@@ -502,15 +975,22 @@ class HollywoodHackerGame {
     this.snippetCharIndex = 0;
     this.triggeredEvents.clear();
 
+    this.rhythmEngine.reset();
+    this.clearNoteElements();
+
     // Clear UI
     this.codeStream.textContent = '';
     this.timerDisplay.textContent = '00:30.00';
     this.progressBar.style.width = '0%';
     this.progressText.textContent = '0%';
+    this.syncVal.textContent = '100%';
     this.kpsValue.textContent = '0.0';
     this.comboValue.textContent = '0';
     this.keysCount.textContent = '0';
-    this.timerBox.classList.remove('timer-warning');
+    this.penaltyDisplay.textContent = '0';
+    this.targetZoneMain.className = 'rhythm-target-zone target-zone-main';
+    this.targetZoneShift.className = 'rhythm-target-zone target-zone-shift';
+    this.countdownOverlay.style.display = 'none';
 
     this.startModal.style.display = 'none';
     this.resultModal.style.display = 'none';

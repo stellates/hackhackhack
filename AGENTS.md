@@ -15,20 +15,21 @@
 
 ```
 hackhackhack/
-├── index.html            # メインHTML（UIレイアウト、CRTオーバーレイ、モーダル）
-├── package.json          # プロジェクト定義（Vite, TypeScript）
+├── index.html            # メインHTML（UIレイアウト、CRTオーバーレイ、ビートレーン、モーダル）
+├── package.json          # プロジェクト定義（Vite, TypeScript, v2.0.0）
 ├── tsconfig.json         # TypeScript設定
 ├── README.md             # ユーザー向けドキュメント
 ├── AGENTS.md             # 本アーキテクチャガイド
 └── src/
     ├── vite-env.d.ts     # Vite型定義
-    ├── style.css         # サイバーパンクUI、スキャンライン、グリッドCSS
-    ├── sound.ts          # Web Audio APIプロシージャル音声合成マネージャー
+    ├── style.css         # サイバーパンクUI、スキャンライン、ビートレーンCSS
+    ├── sound.ts          # Web Audio APIプロシージャルBGMシンセ＆判定音声マネージャー
+    ├── rhythmEngine.ts   # サイバーリズム＆タイミング判定・譜面エンジン (v2.0追加)
     ├── hackerData.ts     # ハッカーコード断片、ログ、演出イベント定義
-    ├── evaluator.ts      # 打鍵メトリクス、採点、称号・ツッコミ判定
+    ├── evaluator.ts      # 打鍵＋リズムメトリクス、厳格採点、称号・ツッコミ判定
     ├── radar.ts          # Canvasによるサイバー脅威レーダー描画
-    ├── canvasExporter.ts # 認定証PNG画像ジェネレーター
-    └── main.ts           # ゲームループ、入力処理、状態遷移コントローラー
+    ├── canvasExporter.ts # 認定証PNG画像ジェネレーター (v2.0対応)
+    └── main.ts           # ゲームループ、ビートハイウェイ描画、入力処理、状態管理
 ```
 
 ---
@@ -36,14 +37,28 @@ hackhackhack/
 ## 3. 各モジュールの設計と責務
 
 ### `src/sound.ts` (`SoundManager`)
-- **責務**: Web Audio APIによるシンセサイズ音声のリアルタイム生成。
+- **責務**: Web Audio APIによるプロシージャルBGM（BPM 132のサイバーシンセ）および効果音のリアルタイム生成。
 - **特徴**:
-  - `playKeyClick(isEnter)`: バンドパスノイズ＋サイン波減衰によるリアルなメカニカル打鍵音。Enter時は重低音オシレーターを追加。
-  - `playLogBeep()`: ターミナルログ更新時のSF風高周波ビープ音。
-  - `playAlarm()`: 脅威検出時の鋸波（Sawtooth）サイレン音。
-  - `playCountdownTick()`: 残り5秒以下の矩形波カウントダウン音。
-  - `playAccessGranted()`: 侵入成功時の7音サイバーアルペジオ＋サブベース。
+  - `startBgm()` / `stopBgm()`: 外部ファイルゼロで、Kick(808風)、Snare、16分Hi-Hat、Acid Bassline、Arpeggio Synthをプロシージャルに自動合成。
+  - `playPerfectHit()` / `playGreatHit()`: ジャストタイミング時のクリティカルサイバーサウンド。
+  - `playMissHit()`: ミス時や探知フェーズ誤打鍵時の過激なグリッチノイズ＆減点ブザー。
+  - `playKeyClick(isEnter)`: メカニカル打鍵音＋Enter強打時の超重低音ボム。
   - ブラウザのAutoplay Policyに準拠し、初回のユーザー入力（キーボード打鍵またはボタンクリック）でAudioContextをResume。
+
+### `src/rhythmEngine.ts` (`RhythmEngine`)
+- **責務**: 30秒間のサイバーハッキング譜面の管理、難易度（EASY / NORMAL / HARD）制御、二段レーン（Dual Highway）独立判定＆連打・Shift並行処理。
+- **レーン構成**:
+  - `SHIFTレーン` (上段): 大文字・記号入力の打鍵感を再現。BURST連打中にも並行して流れる。
+  - `MAINレーン` (下段): BURST（単語連打）、SPACE（語間スペース）、ENTER（行末・ペイロード実行）が混ざり合うリアリスティック・タイピングリズム。
+- **難易度**:
+  - `EASY`: ゆったりとしたノーツ間隔（260px/s）、広い判定（PERFECT ±125ms）。Shiftはなし〜終盤2回のみ。BURST→SPACE→BURST→ENTERの基礎タイピング。
+  - `NORMAL`: 8分音符・2連打（310px/s）、標準判定（PERFECT ±100ms）。Shift頻度が上がり、連打中の並行Shift打鍵が登場。
+  - `HARD`: 16分音符・高速階段（370px/s）、シビア判定（PERFECT ±80ms）。高密度な単語連打とSpace、たまにEnter、そしてBURST連打中に襲いかかる怒涛のShift同時並行打鍵（16回）。
+- **判定枠**: PERFECT, GREAT, GOOD, MISS (見逃し), PENALTY (誤キー打鍵 / タイミング外打鍵)。
+- **キー判定ルーティング**:
+  - Shift打鍵時はSHIFTレーンのノーツのみを評価（MAINレーンの連打やスペース判定を阻害しない）。
+  - Space/Enter打鍵時はMAINレーンのノーツのみを評価。
+  - 通常文字キーは連打・KPS加算・コード生成としてシームレスに機能。
 
 ### `src/hackerData.ts`
 - **責務**: 雰囲気抜群のコードスニペット、ターミナルログ、ドラマチックイベントのデータソース。
