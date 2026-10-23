@@ -78,13 +78,97 @@ class SoundManager {
     return this.muted;
   }
 
-  // ===================== SONG CLOCK =====================
+  private trackBuffers: Map<string, AudioBuffer> = new Map();
+  private currentTrackSource: AudioBufferSourceNode | null = null;
+  private isUsingAudioFile = false;
+
+  public isAudioTrackActive(): boolean {
+    return this.isUsingAudioFile;
+  }
+
+  /** Preloads audio track for specified difficulty */
+  public async preloadTrack(diff: string, filePath: string): Promise<boolean> {
+    this.init();
+    if (!this.ctx) return false;
+
+    const res = await fetch(filePath).catch(() => null);
+    if (res && res.ok) {
+      try {
+        const arrayBuf = await res.arrayBuffer();
+        const audioBuf = await this.ctx.decodeAudioData(arrayBuf);
+        this.trackBuffers.set(diff, audioBuf);
+        console.log(`[SoundManager] Loaded track for ${diff} from ${filePath} (${audioBuf.duration.toFixed(1)}s)`);
+        return true;
+      } catch (err) {
+        console.warn(`[SoundManager] Failed to decode audio from ${filePath}:`, err);
+      }
+    }
+    return false;
+  }
+
+  /** Starts the audio track for given difficulty with precise Web Audio timing */
+  public startTrack(diff: string, delaySeconds = 0): void {
+    this.init();
+    this.stopTrack();
+    this.restoreBgmVolume();
+
+    const buffer = this.trackBuffers.get(diff);
+    if (this.ctx && buffer && this.bgmBus) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(this.bgmBus);
+      const startTime = this.ctx.currentTime + delaySeconds;
+      src.start(startTime);
+      src.onended = () => {
+        if (this.currentTrackSource === src) {
+          this.currentTrackSource = null;
+          this.playing = false;
+        }
+      };
+      this.currentTrackSource = src;
+      this.songStart = startTime;
+      this.isUsingAudioFile = true;
+      this.playing = true;
+      return;
+    }
+
+    // Fallback to internal procedural synth if track not ready
+    this.startSong();
+  }
+
+  /** Gentle volume duck when entering result modal so player can admire their score while track finishes */
+  public duckBgmForResults(): void {
+    if (this.ctx && this.bgmBus) {
+      this.bgmBus.gain.setTargetAtTime(0.32, this.ctx.currentTime, 0.3);
+    }
+  }
+
+  public restoreBgmVolume(): void {
+    if (this.ctx && this.bgmBus) {
+      this.bgmBus.gain.setTargetAtTime(0.42, this.ctx.currentTime, 0.05);
+    }
+  }
+
+  public stopTrack(): void {
+    if (this.currentTrackSource) {
+      try {
+        this.currentTrackSource.stop();
+        this.currentTrackSource.disconnect();
+      } catch {
+        // ignore if already stopped
+      }
+      this.currentTrackSource = null;
+    }
+    this.isUsingAudioFile = false;
+    this.stopSong();
+  }
 
   /** Starts the count-in + song. Beat 0 (game start) arrives after COUNT_IN_BEATS. */
   public startSong(): void {
     this.init();
     this.stopSong();
     this.playing = true;
+    this.isUsingAudioFile = false;
     this.step = -COUNT_IN_BEATS * 4;
 
     if (!this.ctx) {

@@ -276,6 +276,131 @@ html, body {
 }
 
 /* ==========================================================================
+   Terminal Key Legend HUD Bar (Directly Above Typing & Rhythm Highway)
+   Highly visible, large readable key map with interactive hit feedback
+   ========================================================================== */
+.terminal-key-legend-bar {
+  height: 38px;
+  background: linear-gradient(90deg, rgba(5, 14, 25, 0.98) 0%, rgba(8, 20, 36, 0.95) 50%, rgba(5, 14, 25, 0.98) 100%);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.28);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  z-index: 5;
+}
+
+.legend-bar-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #5d819e;
+  letter-spacing: 1.5px;
+  font-family: var(--font-mono);
+  user-select: none;
+}
+
+.legend-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+/* Pulsing color dot indicator */
+.legend-color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.dot-burst {
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88, 0 0 14px rgba(0, 255, 136, 0.6);
+}
+.dot-space {
+  background: #ffd700;
+  box-shadow: 0 0 8px #ffd700, 0 0 14px rgba(255, 215, 0, 0.6);
+}
+.dot-shift {
+  background: #ee77ff;
+  box-shadow: 0 0 8px #ee77ff, 0 0 14px rgba(204, 68, 255, 0.6);
+}
+.dot-enter {
+  background: #ff3377;
+  box-shadow: 0 0 8px #ff3377, 0 0 14px rgba(255, 0, 85, 0.7);
+}
+
+/* Big, readable key badges */
+.key-badge {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  padding: 3px 12px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 1.5px;
+  border-style: solid;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+  transition: all 0.08s ease;
+}
+
+.badge-any {
+  background: rgba(0, 255, 136, 0.12);
+  border-color: #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.25);
+}
+
+.badge-space {
+  background: rgba(255, 215, 0, 0.12);
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+}
+
+.badge-shift {
+  background: rgba(204, 68, 255, 0.15);
+  border-color: #ee77ff;
+  color: #ee77ff;
+  box-shadow: 0 0 10px rgba(204, 68, 255, 0.25);
+}
+
+.badge-enter {
+  background: rgba(255, 0, 85, 0.18);
+  border-color: #ff3377;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 0, 85, 0.35);
+}
+
+.key-subtext {
+  font-size: 12px;
+  font-weight: 800;
+  color: #00ff88;
+  letter-spacing: 0.5px;
+}
+
+/* Key press flash interaction */
+.legend-bar-item.key-pressed {
+  transform: scale(1.08);
+  filter: brightness(1.6);
+}
+.legend-bar-item.key-pressed .key-badge {
+  box-shadow: 0 0 20px currentColor, inset 0 0 10px currentColor;
+}
+.key-guide-pill.key-pressed {
+  transform: scale(1.08);
+  filter: brightness(1.6);
+  box-shadow: 0 0 16px currentColor;
+}
+
+/* ==========================================================================
    Cyber Dual Rhythm Highway (Top: SHIFT Lane, Bottom: MAIN Typing Lane)
    ========================================================================== */
 .rhythm-highway-container.dual-highway {
@@ -493,85 +618,87 @@ html, body {
   pointer-events: none;
 }
 
+/* Flying Notes Stream - Optimized for Zero Motion Blur & High Contrast */
+.rhythm-notes-stream {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .rhythm-note-item {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-weight: 800;
   border-radius: 4px;
-  white-space: nowrap;
-  box-shadow: 0 0 12px currentColor;
-  transition: opacity 0.1s;
+  will-change: transform;
+  backface-visibility: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
 }
 
-/* SPACE Note */
+/* Sharp timing core line down the center of each note block */
+.rhythm-note-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+/* SPACE Note - Pure Electric Gold Crystal Block */
 .note-type-space {
+  top: 8px;
   height: 36px;
-  width: 86px;
-  background: rgba(0, 229, 255, 0.25);
-  border: 2px solid #00e5ff;
-  color: #00e5ff;
-  font-size: 13px;
-  letter-spacing: 1px;
+  width: 64px;
+  background: linear-gradient(180deg, #fff59d 0%, #ffd700 35%, #b28900 100%);
+  border: 2px solid #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.85), inset 0 0 8px rgba(255, 255, 255, 0.6);
 }
 
-/* SHIFT Note - Slim sub-highway note */
+/* SHIFT Note - Pure Neon Purple Cyber Block (on Top Sublane) */
 .note-type-shift {
-  height: 24px;
-  width: 78px;
-  background: rgba(204, 68, 255, 0.3);
-  border: 1.5px solid #ee77ff;
-  color: #ee77ff;
-  font-size: 11px;
-  letter-spacing: 0.8px;
+  top: 5px;
+  height: 26px;
+  width: 56px;
+  background: linear-gradient(180deg, #f8bbd0 0%, #ee77ff 35%, #9c27b0 100%);
+  border: 2px solid #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 0 16px rgba(238, 119, 255, 0.85), inset 0 0 6px rgba(255, 255, 255, 0.6);
 }
 
-/* ENTER Note - Distinct, punchy red payload note that flows like Space and Shift */
+/* ENTER Note - Pure Crimson Red Apex Impact Block */
 .note-type-enter {
-  height: 36px;
-  width: 116px;
-  background: linear-gradient(90deg, rgba(255, 0, 85, 0.6) 0%, rgba(220, 0, 70, 0.85) 100%);
-  border: 2px solid #ff3377;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  box-shadow: 0 0 18px rgba(255, 0, 85, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.3);
+  top: 6px;
+  height: 40px;
+  width: 84px;
+  background: linear-gradient(180deg, #ff80ab 0%, #ff3377 35%, #b71c1c 100%);
+  border: 2.5px solid #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 0 26px rgba(255, 51, 119, 0.95), inset 0 0 10px rgba(255, 255, 255, 0.8);
   z-index: 5;
 }
 
-/* Heavy Screen Shake for Enter smash */
-.screen-shake-heavy {
-  animation: shake-heavy 0.25s cubic-bezier(.36,.07,.19,.97) both;
-}
-
-@keyframes shake-heavy {
-  10%, 90% { transform: translate3d(-3px, 2px, 0); }
-  20%, 80% { transform: translate3d(4px, -3px, 0); }
-  30%, 50%, 70% { transform: translate3d(-5px, 4px, 0); }
-  40%, 60% { transform: translate3d(5px, -4px, 0); }
-}
-
-/* BURST Strip */
+/* BURST Strip - Pure High-Intensity Energy Hazard Zone (NO text) */
 .note-type-burst {
-  height: 30px;
+  top: 9px;
+  height: 34px;
   background: repeating-linear-gradient(
     45deg,
-    rgba(0, 255, 136, 0.3),
-    rgba(0, 255, 136, 0.3) 10px,
-    rgba(0, 255, 136, 0.5) 10px,
-    rgba(0, 255, 136, 0.5) 20px
+    rgba(0, 255, 136, 0.35),
+    rgba(0, 255, 136, 0.35) 10px,
+    rgba(0, 255, 136, 0.65) 10px,
+    rgba(0, 255, 136, 0.65) 20px
   );
   border: 2px solid #00ff88;
-  color: #00ff88;
-  font-size: 11px;
-  justify-content: flex-start;
-  padding-left: 12px;
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), inset 0 0 12px rgba(0, 255, 136, 0.4);
+}
+.note-type-burst::after {
+  display: none; /* No center core line for continuous burst lane */
 }
 
 /* Judgment Popup Display */
@@ -618,17 +745,17 @@ html, body {
   text-shadow: 0 0 15px #ff0055;
 }
 
-/* Current Phase Banner - Compact HUD indicator positioned to never block oncoming notes */
+/* Current Phase Banner - Positioned cleanly at top-right of typing code preview area */
 .current-phase-banner {
   position: absolute;
-  right: 10px;
-  bottom: 4px;
-  top: auto;
-  background: rgba(3, 10, 18, 0.92);
-  border: 1px solid rgba(0, 229, 255, 0.35);
-  padding: 2px 8px;
-  border-radius: 3px;
-  font-size: 10px;
+  right: 14px;
+  top: 12px;
+  bottom: auto;
+  background: rgba(3, 10, 18, 0.94);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 700;
   color: #c9d6df;
   display: flex;
@@ -636,8 +763,9 @@ html, body {
   gap: 6px;
   z-index: 15;
   pointer-events: none;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  font-family: var(--font-mono);
 }
 
 .phase-burst-active {
@@ -797,52 +925,7 @@ html, body {
   color: #ffbb00;
 }
 
-/* Desktop Key Guide - Clear, prominent guidance for PC players */
-.desktop-key-guide {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.key-guide-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(10, 25, 40, 0.7);
-  border: 1px solid rgba(0, 229, 255, 0.25);
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #c9d6df;
-  letter-spacing: 0.5px;
-}
-
-.key-guide-pill kbd {
-  background: #020b12;
-  border: 1px solid currentColor;
-  border-radius: 3px;
-  padding: 2px 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 900;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.pill-any { border-color: rgba(0, 255, 136, 0.4); color: #00ff88; }
-.pill-space { border-color: rgba(255, 215, 0, 0.4); color: #ffd700; }
-.pill-shift { border-color: rgba(204, 68, 255, 0.4); color: #ee77ff; }
-.pill-enter {
-  border-color: rgba(255, 0, 85, 0.7);
-  color: #ff3377;
-  background: rgba(255, 0, 85, 0.12);
-  animation: enter-guide-glow 1s infinite alternate;
-}
-
-@keyframes enter-guide-glow {
-  0% { box-shadow: 0 0 4px rgba(255, 0, 85, 0.3); }
-  100% { box-shadow: 0 0 12px rgba(255, 0, 85, 0.8); }
-}
 
 .mobile-controls-row {
   display: none;
@@ -851,9 +934,6 @@ html, body {
 
 /* Show touch buttons only on small screens or touch devices */
 @media (max-width: 768px), (pointer: coarse) {
-  .desktop-key-guide {
-    display: none;
-  }
   .mobile-controls-row {
     display: flex;
   }
@@ -984,13 +1064,13 @@ html, body {
   letter-spacing: 1px;
 }
 
-/* Modal Overlays (Start & Result) */
+/* Modal Overlays (Start & Result) - Positioned Above CRT scanline for 100% Crisp Text */
 .modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(3, 7, 12, 0.94);
+  background: rgba(3, 7, 14, 0.96);
   backdrop-filter: blur(8px);
-  z-index: 100;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -999,15 +1079,17 @@ html, body {
 
 .modal-card {
   width: 100%;
-  max-width: 680px;
-  background: rgba(8, 16, 26, 0.95);
+  max-width: 720px;
+  background: rgba(8, 16, 28, 0.98);
   border: 2px solid var(--primary-color);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 32px;
-  box-shadow: 0 0 40px rgba(0, 255, 136, 0.25);
+  box-shadow: 0 0 50px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.05);
   text-align: center;
   position: relative;
   max-height: 95vh;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 
 .modal-badge {
@@ -1017,46 +1099,100 @@ html, body {
   color: #00e5ff;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 1px;
-  padding: 4px 12px;
+  letter-spacing: 1.2px;
+  padding: 4px 14px;
   border-radius: 12px;
   margin-bottom: 14px;
+  font-family: var(--font-mono);
 }
 
 .modal-title {
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 900;
   color: #fff;
   letter-spacing: 2px;
   text-shadow: 0 0 15px var(--primary-glow);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
 }
 
 .modal-subtitle {
   color: var(--primary-color);
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 700;
   letter-spacing: 1px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .instructions-box {
-  background: rgba(0, 255, 136, 0.05);
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  padding: 16px 20px;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  background: rgba(4, 14, 24, 0.9);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  padding: 18px 20px;
+  border-radius: 6px;
+  margin-bottom: 22px;
   text-align: left;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
-  color: #b0c8dc;
+  color: #e6f0fa;
 }
 
-.instructions-box strong {
-  color: #fff;
+.rules-summary-line {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+  line-height: 1.5;
 }
-.instructions-box li {
-  margin-left: 20px;
-  margin-top: 6px;
+
+.modal-key-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+@media (max-width: 600px) {
+  .modal-key-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-key-card {
+  background: rgba(8, 18, 30, 0.85);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 5px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.card-burst { border-color: rgba(0, 255, 136, 0.5); background: rgba(0, 255, 136, 0.08); }
+.card-space { border-color: rgba(255, 215, 0, 0.5); background: rgba(255, 215, 0, 0.08); }
+.card-shift { border-color: rgba(204, 68, 255, 0.5); background: rgba(204, 68, 255, 0.08); }
+.card-enter { border-color: rgba(255, 0, 85, 0.5); background: rgba(255, 0, 85, 0.08); }
+
+.modal-key-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.modal-key-text {
+  font-size: 13px;
+  color: #e6f0fa;
+  line-height: 1.4;
+}
+
+.rules-footer-note {
+  font-size: 12.5px;
+  color: #ffaa33;
+  margin-top: 10px;
+  font-weight: 600;
 }
 
 /* Difficulty Selector Styles */
@@ -1163,6 +1299,19 @@ html, body {
   letter-spacing: 1px;
 }
 
+.header-track-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.8px;
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  background: rgba(0, 229, 255, 0.1);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.25);
+  white-space: nowrap;
+}
+
 .result-diff-badge {
   font-size: 12px;
   font-weight: 800;
@@ -1263,56 +1412,210 @@ html, body {
 }
 
 .result-title-banner {
-  background: rgba(255, 235, 59, 0.1);
-  border: 1px solid #ffd700;
-  padding: 10px 16px;
-  border-radius: 4px;
-  color: #ffeb3b;
-  font-size: 18px;
-  font-weight: 800;
+  background: rgba(255, 235, 59, 0.15);
+  border: 2px solid #ffd700;
+  padding: 12px 18px;
+  border-radius: 5px;
+  color: #fff266;
+  font-size: 20px;
+  font-weight: 900;
   margin: 16px 0;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  letter-spacing: 1px;
 }
 
 .result-stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
   margin: 16px 0;
 }
 .result-stat-card {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  padding: 10px;
-  border-radius: 4px;
+  background: rgba(4, 12, 22, 0.85);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  padding: 12px 14px;
+  border-radius: 5px;
   text-align: left;
 }
 .stat-card-label {
-  font-size: 11px;
-  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+  color: #9bbcd8;
+  letter-spacing: 0.5px;
 }
 .stat-card-val {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 900;
   color: #00ffff;
-  margin-top: 4px;
+  margin-top: 5px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
 }
 
 .result-roast-box {
-  background: rgba(255, 51, 102, 0.08);
-  border-left: 4px solid var(--danger-color);
-  padding: 12px 16px;
+  background: rgba(255, 51, 102, 0.12);
+  border-left: 4px solid #ff3366;
+  padding: 14px 18px;
   text-align: left;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: #ffccd5;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #fff0f3;
   margin: 16px 0 24px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif;
+  border-radius: 0 5px 5px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
-.modal-actions {
+/* Modal Corner Back Button (Top-Left) */
+.modal-corner-back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1.5px solid rgba(0, 229, 255, 0.45);
+  color: var(--cyan-color);
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 20;
+}
+.modal-corner-back-btn:hover {
+  background: rgba(0, 229, 255, 0.22);
+  border-color: #00e5ff;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+  transform: translateX(-2px);
+}
+.modal-corner-back-btn:active {
+  transform: translateX(0);
+}
+.corner-btn-icon {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+}
+
+/* Result Bottom Action Bar: [認定証DL] | [結果をCOPY] | [RETRY] | [X] */
+.result-action-bar {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
   flex-wrap: wrap;
+}
+
+.result-bar-btn {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  white-space: nowrap;
+}
+
+.btn-glyph {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+/* 認定証DL (ネオングリーン) */
+.result-bar-btn.btn-dl {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.18) 0%, rgba(0, 180, 90, 0.28) 100%);
+  border: 1.5px solid #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+}
+.result-bar-btn.btn-dl:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.32) 0%, rgba(0, 220, 120, 0.45) 100%);
+  box-shadow: 0 0 22px rgba(0, 255, 136, 0.6);
+  transform: translateY(-2px);
+}
+
+/* 結果をCOPY (シアン) */
+.result-bar-btn.btn-copy {
+  background: rgba(0, 229, 255, 0.1);
+  border: 1.5px solid rgba(0, 229, 255, 0.55);
+  color: #00e5ff;
+}
+.result-bar-btn.btn-copy:hover {
+  background: rgba(0, 229, 255, 0.24);
+  border-color: #00ffff;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+/* RETRY (ゴールド/アンバー) */
+.result-bar-btn.btn-retry {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1.5px solid rgba(255, 215, 0, 0.55);
+  color: #ffd700;
+}
+.result-bar-btn.btn-retry:hover {
+  background: rgba(255, 215, 0, 0.24);
+  border-color: #ffea00;
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+/* X (Twitter) (ホワイト＆ダーク) */
+.result-bar-btn.btn-x {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  color: #ffffff;
+}
+.result-bar-btn.btn-x:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.result-bar-btn:active {
+  transform: translateY(0);
+}
+
+/* Cyber Toast Notification */
+.cyber-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(8, 16, 28, 0.96);
+  border: 1.5px solid #00ff88;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), 0 4px 20px rgba(0, 0, 0, 0.8);
+  z-index: 2000;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cyber-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* Mobile Responsiveness */

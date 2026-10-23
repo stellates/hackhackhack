@@ -25,7 +25,44 @@ export interface JudgmentFeedback {
   noteLabel: string;
   noteType?: NoteType;
   message?: string;
+  isLastNote?: boolean;
 }
+
+export interface TrackConfig {
+  diff: Difficulty;
+  title: string;
+  artist: string;
+  bpm: number;
+  duration: number; // in seconds
+  primaryFile: string;
+}
+
+export const TRACK_CONFIGS: Record<Difficulty, TrackConfig> = {
+  EASY: {
+    diff: 'EASY',
+    title: 'NEURAL OVERDRIVE [CHILL]',
+    artist: 'GEMINI LYRIA',
+    bpm: 118,
+    duration: 35.0,
+    primaryFile: '/audio/easy.mp3'
+  },
+  NORMAL: {
+    diff: 'NORMAL',
+    title: 'CYBER ATTACK VECTOR',
+    artist: 'GEMINI LYRIA',
+    bpm: 134,
+    duration: 48.0,
+    primaryFile: '/audio/normal.mp3'
+  },
+  HARD: {
+    diff: 'HARD',
+    title: 'BREAKCORE PROTOCOL // APOCALYPSE',
+    artist: 'GEMINI LYRIA',
+    bpm: 165,
+    duration: 56.0,
+    primaryFile: '/audio/hard.mp3'
+  }
+};
 
 export class RhythmEngine {
   private notes: RhythmNote[] = [];
@@ -52,6 +89,10 @@ export class RhythmEngine {
     this.setDifficulty(difficulty);
   }
 
+  public getCurrentTrack(): TrackConfig {
+    return TRACK_CONFIGS[this.difficulty];
+  }
+
   public setDifficulty(d: Difficulty): void {
     this.difficulty = d;
     if (d === 'EASY') {
@@ -68,7 +109,7 @@ export class RhythmEngine {
       this.PERFECT_WINDOW = 0.080;
       this.GREAT_WINDOW = 0.140;
       this.GOOD_WINDOW = 0.200;
-      this.scrollSpeed = 370;
+      this.scrollSpeed = 380;
     }
     this.reset();
   }
@@ -99,140 +140,165 @@ export class RhythmEngine {
     this.activeNotes = [...this.notes];
   }
 
-  // ===================== EASY CHART =====================
-  // Natural typing cadence (Word Burst -> Space -> Word Burst -> Enter)
-  // Shift is minimal (only 2 times late in the song) so beginner can grasp the dual lane gently.
+  // ===================== EASY CHART (BPM 118, 35s - Chorus Outro) =====================
+  // Smooth retrowave cyber groove ending right after the chorus climax (35s).
   private buildEasyChart(): void {
-    // Phrase 1 (0 ~ 7.5s): Warm-up & 1st Enter
-    this.addNote('BURST', 2.00, 'PORT SCAN RUN', 2.2);
-    this.addNote('SPACE', 4.80, 'FIREWALL BREAK');
-    this.addNote('BURST', 5.30, 'ROUTING BYPASS', 1.4);
-    this.addNote('ENTER', 7.50, 'INJECT ROP CHAIN'); // Bar 5
+    // Phrase 1 (0 ~ 8.1s): Warm-up & 1st Enter
+    this.addNote('BURST', 2.03, 'PORT SCAN RUN', 1.9);
+    this.addNote('SPACE', 4.07, 'FIREWALL BREAK');
+    this.addNote('BURST', 5.08, 'ROUTING BYPASS', 1.6);
+    this.addNote('SPACE', 7.12, 'DELIMITER');
+    this.addNote('ENTER', 8.14, 'INJECT ROP CHAIN');
 
-    // Phrase 2 (7.5 ~ 15.0s): Breach & Enter
-    this.addNote('BURST', 8.40, 'HEAP OVERFLOW', 2.4);
-    this.addNote('SPACE', 11.50, 'ICE DISARM');
-    this.addNote('BURST', 12.20, 'PROXY EXECUTE', 1.6);
-    this.addNote('ENTER', 15.00, 'CORE PAYLOAD'); // Bar 9
+    // Phrase 2 (8.1 ~ 16.3s): Breach & Override
+    this.addNote('BURST', 9.15, 'HEAP OVERFLOW', 2.2);
+    this.addNote('SPACE', 11.69, 'ICE DISARM');
+    this.addNote('BURST', 12.71, 'PROXY EXECUTE', 1.8);
+    this.addNote('SPACE', 14.75, 'TOKEN SYNC');
+    this.addNote('ENTER', 15.76, 'CORE PAYLOAD');
 
-    // Phrase 3 (15.0 ~ 22.5s): Decrypt & Override (Introduces 1st Shift)
-    this.addNote('BURST', 15.90, 'QUANTUM CRACKER', 2.3);
-    this.addNote('SPACE', 18.90, 'KEY SYNC');
-    this.addNote('BURST', 19.60, 'BUFFER FLUSH', 1.4);
-    this.addNote('SHIFT', 21.80, 'OVERCLOCK DRIVE');
-    this.addNote('ENTER', 22.50, 'SECURITY OVERRIDE'); // Bar 13
+    // Phrase 3 (16.3 ~ 26.4s): Main Chorus Explosion & 1st Shift
+    this.addNote('BURST', 16.78, 'QUANTUM CRACKER', 2.4);
+    this.addNote('SPACE', 19.83, 'KEY SYNC');
+    this.addNote('BURST', 20.85, 'BUFFER FLUSH', 1.8);
+    this.addNote('SHIFT', 23.39, 'OVERCLOCK DRIVE');
+    this.addNote('SPACE', 24.41, 'DELIM GAP');
+    this.addNote('ENTER', 25.42, 'SECURITY OVERRIDE');
 
-    // Phrase 4 (22.5 ~ 30.0s): Climax (2nd Shift into Final Slam)
-    this.addNote('BURST', 23.40, 'FINAL RECURSION', 2.4);
-    this.addNote('SPACE', 26.60, 'WARHEAD UNSEAL');
-    this.addNote('BURST', 27.20, 'CRITICAL PROTOCOL', 1.3);
-    this.addNote('SHIFT', 28.90, 'SAFETY RELEASE');
-    this.addNote('ENTER', 29.53, '💥 GRAND SLAM SHUTDOWN!'); // Bar 16
+    // Phrase 4 (26.4 ~ 35.0s): Grand Chorus Finale Slam
+    this.addNote('BURST', 26.44, 'FINAL RECURSION', 2.2);
+    this.addNote('SHIFT', 28.98, 'SAFETY RELEASE');
+    this.addNote('SPACE', 30.51, 'WARHEAD UNSEAL');
+    this.addNote('BURST', 31.53, 'APEX PROTOCOL', 1.8);
+    this.addNote('SHIFT', 33.56, 'FINAL KEYLOCK');
+    this.addNote('ENTER', 34.50, '💥 GRAND CHORUS SLAM!'); // Perfect musical cut at 34.5s
   }
 
-  // ===================== NORMAL CHART =====================
-  // Balanced typing rhythm: Bursts separated by Spaces, with 8 Shifts on the Shift sublane.
-  // Several Shifts occur concurrently with Bursts to introduce parallel two-hand coordination!
+  // ===================== NORMAL CHART (BPM 134, 48s - Drop Climax) =====================
+  // Upbeat Cyber Electro ending after the peak drop explosion (48s).
   private buildNormalChart(): void {
-    // Phrase 1 (0 ~ 7.5s): Perimeter Breach
-    this.addNote('BURST', 2.00, 'PORT SCAN RUN', 1.8);
-    this.addNote('SHIFT', 3.10, 'CAPS LOCK VAR');      // Parallel in Burst!
-    this.addNote('SPACE', 4.40, 'DELIMITER');
-    this.addNote('BURST', 4.90, 'FIREWALL PIERCE', 1.4);
-    this.addNote('SPACE', 6.80, 'PROXY TOKEN');
-    this.addNote('ENTER', 7.50, 'INJECT ROP CHAIN');    // Bar 5 Downbeat
+    // Phrase 1 (0 ~ 12.0s): Perimeter Infiltration
+    this.addNote('BURST', 1.79, 'PORT SCAN RUN', 1.6);
+    this.addNote('SHIFT', 2.69, 'CAPS LOCK VAR');
+    this.addNote('SPACE', 3.58, 'DELIMITER');
+    this.addNote('BURST', 4.48, 'FIREWALL PIERCE', 1.4);
+    this.addNote('SPACE', 6.27, 'PROXY TOKEN');
+    this.addNote('SPACE', 7.16, 'BEAT IMPACT'); // Beat kicks in at 7.16s!
+    this.addNote('BURST', 8.06, 'ZERO-DAY STREAM', 1.6);
+    this.addNote('SHIFT', 8.96, 'POINTER CAST');
+    this.addNote('ENTER', 10.75, 'INJECT ROP CHAIN');
 
-    // Phrase 2 (7.5 ~ 15.0s): ICE Penetration
-    this.addNote('BURST', 8.20, 'HEAP SPRAY', 1.8);
-    this.addNote('SHIFT', 9.30, 'POINTER CAST');        // Parallel in Burst!
-    this.addNote('SPACE', 10.60, 'PARAM GAP');
-    this.addNote('BURST', 11.10, 'ICE CRUSHER', 1.5);
-    this.addNote('SHIFT', 12.10, 'UPPER TOKEN');        // Parallel in Burst!
-    this.addNote('SPACE', 13.20, 'CALL GAP');
-    this.addNote('SPACE', 14.00, 'ARGS SEPARATOR');     // Double Space!
-    this.addNote('ENTER', 15.00, 'CORE PAYLOAD');       // Bar 9 Downbeat
+    // Phrase 2 (12.0 ~ 24.0s): ICE Penetration
+    this.addNote('BURST', 11.64, 'HEAP SPRAY', 1.8);
+    this.addNote('SHIFT', 12.54, 'UPPER TOKEN');
+    this.addNote('SPACE', 14.33, 'PARAM GAP');
+    this.addNote('BURST', 15.22, 'ICE CRUSHER', 1.6);
+    this.addNote('SHIFT', 16.12, 'VTABLE HOOK');
+    this.addNote('SPACE', 17.91, 'CALL GAP');
+    this.addNote('SPACE', 18.81, 'ARGS SEPARATOR');
+    this.addNote('BURST', 19.70, 'CANARY BYPASS', 1.6);
+    this.addNote('SHIFT', 20.60, 'REG_EAX');
+    this.addNote('ENTER', 22.39, 'CORE PAYLOAD');
 
-    // Phrase 3 (15.0 ~ 22.5s): Neural Overdrive
-    this.addNote('BURST', 15.80, 'QUANTUM MATRIX', 1.8);
-    this.addNote('SHIFT', 16.80, 'FREQ BOOST');         // Parallel in Burst!
-    this.addNote('SPACE', 18.20, 'BLOCK GAP');
-    this.addNote('BURST', 18.70, 'BUFFER OVERCLOCK', 1.5);
-    this.addNote('SHIFT', 19.60, 'HEX PREFIX');         // Parallel in Burst!
-    this.addNote('SPACE', 20.80, 'TOKEN GAP');
-    this.addNote('SHIFT', 21.70, 'VOLTAGE MAX');
-    this.addNote('ENTER', 22.50, 'SECURITY OVERRIDE');  // Bar 13 Downbeat
+    // Phrase 3 (24.0 ~ 36.0s): Build-up to Drop
+    this.addNote('BURST', 23.28, 'QUANTUM MATRIX', 1.8);
+    this.addNote('SHIFT', 24.18, 'FREQ BOOST');
+    this.addNote('SPACE', 25.97, 'BLOCK GAP');
+    this.addNote('BURST', 26.87, 'BUFFER OVERCLOCK', 1.6);
+    this.addNote('SHIFT', 27.76, 'HEX PREFIX');
+    this.addNote('SPACE', 29.55, 'TOKEN GAP');
+    this.addNote('SHIFT', 30.45, 'VOLTAGE MAX');
+    this.addNote('BURST', 31.34, 'BUILDUP STREAM', 1.8);
+    this.addNote('SHIFT', 32.24, 'PRESSURE HIGH');
+    this.addNote('SPACE', 34.03, 'PRE-DROP SILENCE');
+    this.addNote('ENTER', 35.82, '🔥 DROP INITIATION SLAM!'); // 36s Drop!
 
-    // Phrase 4 (22.5 ~ 30.0s): Grand Climax
-    this.addNote('BURST', 23.20, 'NEURAL HIJACK', 1.8);
-    this.addNote('SHIFT', 24.30, 'ROOT ELEVATE');       // Parallel in Burst!
-    this.addNote('SPACE', 25.60, 'WARHEAD GAP');
-    this.addNote('BURST', 26.10, 'CIPHER DECIMATE', 1.4);
-    this.addNote('SHIFT', 27.00, 'FINAL SYMBOL');       // Parallel in Burst!
-    this.addNote('SPACE', 28.10, 'TRIGGER RELEASE');
-    this.addNote('SHIFT', 28.80, 'ARM MISSILE');
-    this.addNote('ENTER', 29.53, '💥 GRAND SLAM SHUTDOWN!'); // Bar 16 Climax
+    // Phrase 4 (36.0 ~ 48.0s): Massive Drop Climax Finale
+    this.addNote('BURST', 36.72, 'NEURAL OVERDRIVE', 2.0);
+    this.addNote('SHIFT', 37.61, 'ROOT ELEVATE');
+    this.addNote('SPACE', 39.40, 'WARHEAD GAP');
+    this.addNote('BURST', 40.30, 'CIPHER DECIMATE', 1.8);
+    this.addNote('SHIFT', 41.19, 'FINAL SYMBOL');
+    this.addNote('SPACE', 42.99, 'TRIGGER RELEASE');
+    this.addNote('BURST', 43.88, 'APEX DESTRUCTION', 1.8);
+    this.addNote('SHIFT', 44.78, 'ARM MISSILE');
+    this.addNote('SPACE', 46.57, 'FINAL LOCK');
+    this.addNote('ENTER', 47.50, '💥 APOCALYPTIC DROP SLAM!'); // Perfect musical cut at 47.5s
   }
 
-  // ===================== HARD CHART =====================
-  // Expert Hacker mode: High-density Burst & Space combinations, occasional heavy Enters,
-  // and frequent Shifts (16 total) flowing on the Shift sublane concurrently with bursts!
+  // ===================== HARD CHART (BPM 165, 56s - Neurofunk Drop Finale) =====================
+  // Expert Hacker mode: 56-second high-density breakcore ending with the peak drop climax (56s).
   private buildHardChart(): void {
-    // Phrase 1 (0 ~ 7.5s): Blitzkrieg Breach
-    this.addNote('BURST', 2.00, 'KEYWORD INJECT', 1.4);
-    this.addNote('SHIFT', 2.60, 'UPPER_A');            // Parallel in Burst!
-    this.addNote('SHIFT', 3.10, 'UPPER_B');            // Parallel in Burst!
-    this.addNote('SPACE', 3.70, 'GAP 1');
-    this.addNote('BURST', 4.00, 'VARIABLE ASSIGN', 1.1);
-    this.addNote('SHIFT', 4.60, 'DOLLAR_SYM');         // Parallel in Burst!
-    this.addNote('SPACE', 5.40, 'GAP 2');
-    this.addNote('BURST', 5.70, 'METHOD CALL', 1.0);
-    this.addNote('SHIFT', 6.20, 'BRACKET_OPEN');       // Parallel in Burst!
-    this.addNote('SPACE', 7.00, 'GAP 3');
-    this.addNote('ENTER', 7.50, 'ROP CHAIN SLAM!');    // Bar 5 Downbeat
+    // Section 1 (0 ~ 13.0s): Neurofunk Infiltration
+    this.addNote('BURST', 1.45, 'KEYWORD INJECT', 1.3);
+    this.addNote('SHIFT', 2.00, 'UPPER_A');
+    this.addNote('SHIFT', 2.54, 'UPPER_B');
+    this.addNote('SPACE', 3.09, 'GAP 1');
+    this.addNote('BURST', 3.45, 'VARIABLE ASSIGN', 1.2);
+    this.addNote('SHIFT', 4.00, 'DOLLAR_SYM');
+    this.addNote('SPACE', 4.90, 'GAP 2');
+    this.addNote('BURST', 5.27, 'METHOD CALL', 1.2);
+    this.addNote('SHIFT', 5.82, 'BRACKET_OPEN');
+    this.addNote('SPACE', 6.90, 'DELIM 1');
+    this.addNote('SPACE', 7.45, 'DELIM 2');
+    this.addNote('BURST', 7.82, 'BYTECODE INJECT', 1.4);
+    this.addNote('SHIFT', 8.54, 'REG_EAX');
+    this.addNote('SHIFT', 9.27, 'REG_EBX');
+    this.addNote('SPACE', 10.00, 'EXECUTE GAP');
+    this.addNote('ENTER', 10.91, '🔥 1ST ROP SLAM!');
 
-    // Phrase 2 (7.5 ~ 15.0s): Memory Devastation
-    this.addNote('BURST', 8.10, 'ZERO-DAY STREAM', 1.4);
-    this.addNote('SHIFT', 8.60, 'POINTER_CAST');       // Parallel in Burst!
-    this.addNote('SHIFT', 9.20, 'DEREF_AMP');          // Parallel in Burst!
-    this.addNote('SPACE', 9.80, 'SEMICOLON GAP');
-    this.addNote('BURST', 10.20, 'STACK OVERWRITE', 1.2);
-    this.addNote('SHIFT', 10.80, 'REG_EAX');           // Parallel in Burst!
-    this.addNote('SPACE', 11.70, 'DELIM 1');
-    this.addNote('SPACE', 12.20, 'DELIM 2');
-    this.addNote('BURST', 12.50, 'HEAP EXPANSION', 1.4);
-    this.addNote('SHIFT', 13.00, 'STRUCT_TYPEDEF');    // Parallel in Burst!
-    this.addNote('SHIFT', 13.60, 'SIZEOF_CONST');      // Parallel in Burst!
-    this.addNote('SPACE', 14.30, 'FINAL GAP');
-    this.addNote('ENTER', 15.00, 'CORE PAYLOAD SLAM!'); // Bar 9 Downbeat
+    // Section 2 (13.0 ~ 26.0s): 1st Drop Wave
+    this.addNote('BURST', 11.82, 'ZERO-DAY STREAM', 1.5);
+    this.addNote('SHIFT', 12.36, 'POINTER_CAST');
+    this.addNote('SHIFT', 13.09, 'DEREF_AMP');
+    this.addNote('SPACE', 13.82, 'SEMICOLON');
+    this.addNote('BURST', 14.18, 'STACK OVERWRITE', 1.4);
+    this.addNote('SHIFT', 14.90, 'CANARY_BYPASS');
+    this.addNote('SPACE', 16.00, 'PAYLOAD GAP');
+    this.addNote('BURST', 16.54, 'HEAP EXPANSION', 1.5);
+    this.addNote('SHIFT', 17.27, 'STRUCT_TYPEDEF');
+    this.addNote('SHIFT', 18.00, 'SIZEOF_CONST');
+    this.addNote('SPACE', 18.90, 'CALL GAP');
+    this.addNote('BURST', 19.45, 'VTABLE HIJACK', 1.2);
+    this.addNote('SHIFT', 20.00, 'OFFSET_HOOK');
+    this.addNote('SPACE', 21.09, 'CONFIRM GAP');
+    this.addNote('ENTER', 21.82, '⚡ CORE DEVASTATION SLAM!');
 
-    // Phrase 3 (15.0 ~ 22.5s): Neural Quantum Override
-    this.addNote('BURST', 15.60, 'QUANTUM ENTANGLE', 1.4);
-    this.addNote('SHIFT', 16.10, 'LAMBDA_FN');         // Parallel in Burst!
-    this.addNote('SHIFT', 16.70, 'PIPE_OPERATOR');      // Parallel in Burst!
-    this.addNote('SPACE', 17.30, 'EXPR GAP');
-    this.addNote('BURST', 17.70, 'LATTICE ANNEAL', 1.2);
-    this.addNote('SHIFT', 18.30, 'TEMPLATE_ARG');      // Parallel in Burst!
-    this.addNote('SPACE', 19.20, 'ARG GAP');
-    this.addNote('BURST', 19.60, 'REGISTER INVERT', 1.4);
-    this.addNote('SHIFT', 20.10, 'BITWISE_XOR');       // Parallel in Burst!
-    this.addNote('SHIFT', 20.70, 'MASK_HEX');          // Parallel in Burst!
-    this.addNote('SPACE', 21.40, 'STMT GAP');
-    this.addNote('SPACE', 21.90, 'BLOCK END');
-    this.addNote('ENTER', 22.50, 'SECURITY OVERRIDE SLAM!'); // Bar 13 Downbeat
+    // Section 3 (26.0 ~ 40.0s): Quantum Buildup & Drop
+    this.addNote('BURST', 23.27, 'QUANTUM ENTANGLE', 1.6);
+    this.addNote('SHIFT', 24.00, 'LAMBDA_FN');
+    this.addNote('SHIFT', 24.72, 'PIPE_OPERATOR');
+    this.addNote('SPACE', 25.45, 'EXPR GAP');
+    this.addNote('BURST', 26.18, 'LATTICE ANNEAL', 1.4);
+    this.addNote('SHIFT', 26.90, 'TEMPLATE_ARG');
+    this.addNote('SPACE', 28.00, 'TOKEN GAP');
+    this.addNote('BURST', 28.72, 'REGISTER INVERT', 1.5);
+    this.addNote('SHIFT', 29.45, 'BITWISE_XOR');
+    this.addNote('SHIFT', 30.18, 'MASK_HEX');
+    this.addNote('SPACE', 31.27, 'BLOCK GAP');
+    this.addNote('BURST', 32.00, 'NEURAL OVERCLOCK', 1.4);
+    this.addNote('SHIFT', 32.72, 'MAX_VOLTAGE');
+    this.addNote('SPACE', 33.45, 'TRIGGER CONFIRM');
+    this.addNote('ENTER', 34.50, '💥 QUANTUM OVERRIDE SLAM!');
 
-    // Phrase 4 (22.5 ~ 30.0s): Grand Apocalyptic Climax
-    this.addNote('BURST', 23.10, 'APOCALYPSE PROTOCOL', 1.5);
-    this.addNote('SHIFT', 23.70, 'ROOT_AUTH_TOKEN');   // Parallel in Burst!
-    this.addNote('SHIFT', 24.30, 'ESCAPE_SEQ');        // Parallel in Burst!
-    this.addNote('SPACE', 24.90, 'COMMAND GAP');
-    this.addNote('BURST', 25.30, 'PAYLOAD COMPRESS', 1.1);
-    this.addNote('SHIFT', 25.90, 'MACRO_DEFINE');      // Parallel in Burst!
-    this.addNote('ENTER', 26.80, 'INTERMEDIATE TRIGGER'); // Occasional mid Enter!
-    this.addNote('BURST', 27.20, 'KILL SWITCH DEPLOY', 1.4);
-    this.addNote('SHIFT', 27.70, 'NULL_PTR_UNWRAP');   // Parallel in Burst!
-    this.addNote('SHIFT', 28.30, 'FORCE_OVERRIDE');    // Parallel in Burst!
-    this.addNote('SPACE', 29.00, 'LAUNCH CONFIRM');
-    this.addNote('ENTER', 29.53, '💥 APOCALYPTIC ROOT SLAM!'); // Climax Grand Finale!!
+    // Section 4 (40.0 ~ 56.0s): Apocalyptic Peak Climax Finale
+    this.addNote('BURST', 36.36, 'APOCALYPSE PROTOCOL', 1.8);
+    this.addNote('SHIFT', 37.45, 'ROOT_AUTH_TOKEN');
+    this.addNote('SHIFT', 38.18, 'ESCAPE_SEQ');
+    this.addNote('SPACE', 39.27, 'COMMAND GAP');
+    this.addNote('BURST', 40.00, 'PAYLOAD COMPRESS', 1.6);
+    this.addNote('SHIFT', 41.09, 'MACRO_DEFINE');
+    this.addNote('SPACE', 42.54, 'INTERMEDIATE TRIGGER');
+    this.addNote('BURST', 43.63, 'KILL SWITCH DEPLOY', 1.8);
+    this.addNote('SHIFT', 44.72, 'NULL_PTR_UNWRAP');
+    this.addNote('SHIFT', 45.45, 'FORCE_OVERRIDE');
+    this.addNote('SPACE', 46.90, 'LAUNCH CONFIRM 1');
+    this.addNote('BURST', 48.00, 'WARHEAD DETONATE', 1.8);
+    this.addNote('SHIFT', 49.09, 'SYSTEM CORE UNLOCK');
+    this.addNote('SHIFT', 50.18, 'FINAL OVERRIDE');
+    this.addNote('SPACE', 52.00, 'ULTIMATE TRIGGER');
+    this.addNote('SHIFT', 53.45, 'FINAL ARM');
+    this.addNote('ENTER', 55.40, '💥 APOCALYPTIC ROOT SLAM!'); // Musical drop cutoff at 55.4s
   }
 
   private addNote(type: NoteType, targetTime: number, label: string, duration?: number): void {
@@ -299,12 +365,15 @@ export class RhythmEngine {
           note.missed = true;
           this.missCount++;
           this.rhythmCombo = 0;
+          const lastNote = this.notes[this.notes.length - 1];
+          const isLastNote = lastNote && note.id === lastNote.id;
           feedbackList.push({
             type: 'MISS',
             scoreChange: -600,
             noteLabel: note.label,
             noteType: note.type,
-            message: `MISSED ${note.type}!`
+            message: `MISSED ${note.type}!`,
+            isLastNote
           });
         }
       }
@@ -424,12 +493,16 @@ export class RhythmEngine {
             this.maxRhythmCombo = this.rhythmCombo;
           }
 
+          const lastNote = this.notes[this.notes.length - 1];
+          const isLastNote = lastNote && candidateMainNote.id === lastNote.id;
+
           return {
             type: judgment,
             scoreChange,
             noteLabel: candidateMainNote.label,
             noteType: expectedType,
-            message: `${judgment}!!`
+            message: expectedType === 'ENTER' && isLastNote ? '💥 FINAL ACCESS PAYLOAD EXECUTED!!' : `${judgment}!!`,
+            isLastNote
           };
         } else {
           // Wrong key on MAIN lane! (e.g. pressed Space when Enter was needed, or vice-versa)
@@ -437,12 +510,15 @@ export class RhythmEngine {
           candidateMainNote.missed = true;
           this.penaltyCount++;
           this.rhythmCombo = 0;
+          const lastNote = this.notes[this.notes.length - 1];
+          const isLastNote = lastNote && candidateMainNote.id === lastNote.id;
           return {
             type: 'PENALTY',
             scoreChange: -800,
             noteLabel: candidateMainNote.label,
             noteType: expectedType,
-            message: `WRONG KEY! NEEDED ${expectedType}`
+            message: `WRONG KEY! NEEDED ${expectedType}`,
+            isLastNote
           };
         }
       } else {

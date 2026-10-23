@@ -275,3 +275,41 @@ export function downloadReportCard(metrics: TypingMetrics): void {
   link.click();
   document.body.removeChild(link);
 }
+
+export async function getReportCardBlob(metrics: TypingMetrics): Promise<Blob> {
+  const canvas = generateReportCardCanvas(metrics);
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if (b) resolve(b);
+      else reject(new Error('Failed to generate image blob'));
+    }, 'image/png');
+  });
+}
+
+export async function shareReportCardToX(metrics: TypingMetrics): Promise<void> {
+  const currentUrl = window.location.href;
+  const tweetText = `【THE HOLLYWOOD HACKER】ハッカー適性診断
+ランク: ${metrics.rank} (${metrics.score.toLocaleString()} PTS)
+称号: ${metrics.title}
+同期率: ${metrics.syncRate}% | 最高速度: ${metrics.peakKps} Keys/s
+寸評: ${metrics.roast}
+
+映画風の猛烈打鍵＆サイバー音ゲーでハリウッドハッカーを体験せよ！
+#HollywoodHacker #ハッカー音ゲータイピング`;
+
+  // Try copying certificate image to clipboard so user can instantly paste (Ctrl+V) into the tweet
+  try {
+    const blob = await getReportCardBlob(metrics);
+    if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+    }
+  } catch (clipErr) {
+    console.warn('Could not copy image to clipboard:', clipErr);
+  }
+
+  // Directly open Twitter Web Intent
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(currentUrl)}`;
+  window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+}

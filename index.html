@@ -61,6 +61,9 @@
           <div id="header-diff-badge" class="header-diff-badge diff-normal">
             NORMAL
           </div>
+          <div id="header-track-info" class="header-track-badge">
+            🎵 CYBER ATTACK VECTOR [BPM 135]
+          </div>
         </div>
 
         <div class="header-center">
@@ -104,13 +107,35 @@
             <div class="title-status" id="highway-status">BEAT SYNC: ACTIVE</div>
           </div>
 
+          <!-- In-Game Key Legend HUD Bar (タイピングエリア直上の大判キー＆カラー対応表) -->
+          <div class="terminal-key-legend-bar" id="terminal-key-legend" aria-label="Key & Color Map">
+            <span class="legend-bar-title">KEY MAP //</span>
+            <div class="legend-bar-item item-any" id="hud-key-any" title="任意の文字キーで連打">
+              <span class="legend-color-dot dot-burst"></span>
+              <kbd class="key-badge badge-any">ANY KEY</kbd>
+              <span class="key-subtext">連打</span>
+            </div>
+            <div class="legend-bar-item item-space" id="hud-key-space" title="SPACEキー">
+              <span class="legend-color-dot dot-space"></span>
+              <kbd class="key-badge badge-space">SPACE</kbd>
+            </div>
+            <div class="legend-bar-item item-shift" id="hud-key-shift" title="SHIFTキー">
+              <span class="legend-color-dot dot-shift"></span>
+              <kbd class="key-badge badge-shift">SHIFT</kbd>
+            </div>
+            <div class="legend-bar-item item-enter" id="hud-key-enter" title="ENTERキー">
+              <span class="legend-color-dot dot-enter"></span>
+              <kbd class="key-badge badge-enter">ENTER</kbd>
+            </div>
+          </div>
+
           <!-- Cyber Dual Rhythm Highway (Top: SHIFT Lane, Bottom: MAIN Typing Lane) -->
           <div class="rhythm-highway-container dual-highway" id="rhythm-highway">
             <div class="rhythm-track-bg"></div>
 
             <!-- Top Lane: SHIFT Sub-Highway -->
             <div class="rhythm-sublane shift-lane" id="rhythm-shift-lane">
-              <span class="sublane-tag tag-shift">⇧ SHIFT</span>
+              <span class="sublane-tag tag-shift">⇧ SHIFT レーン</span>
               <div class="rhythm-target-zone target-zone-shift" id="target-zone-shift">
                 <div class="target-bracket bracket-left">[</div>
                 <div class="target-bracket bracket-right">]</div>
@@ -122,7 +147,7 @@
 
             <!-- Bottom Lane: MAIN Highway (BURST / SPACE / ENTER) -->
             <div class="rhythm-sublane main-lane" id="rhythm-main-lane">
-              <span class="sublane-tag tag-main">🎯 TYPING</span>
+              <span class="sublane-tag tag-main">🎯 MAIN レーン</span>
               <div class="rhythm-target-zone target-zone-main" id="target-zone-main">
                 <div class="target-bracket bracket-left">[</div>
                 <div class="target-bracket bracket-right">]</div>
@@ -134,13 +159,13 @@
 
             <!-- Dynamic Judgment Popup -->
             <div class="rhythm-judgment-pop" id="rhythm-judgment-pop"></div>
-            <!-- Current Phase Banner -->
+          </div>
+          <div class="terminal-content" id="terminal-scroll-area">
+            <!-- Current Phase Banner (Moved to top-right of typing preview area) -->
             <div class="current-phase-banner" id="phase-banner">
               <span id="phase-icon">⚡</span>
               <span id="phase-text">STANDBY: キーボードを構えろ！</span>
             </div>
-          </div>
-          <div class="terminal-content" id="terminal-scroll-area">
             <div id="code-stream"></div>
             <span class="cursor-blink"></span>
           </div>
@@ -210,13 +235,7 @@
           <span id="penalty-display" class="combo-count" style="color: #ff3366;">0</span>
         </div>
 
-        <!-- Desktop Keyboard Guide (PCキーボード用ガイド) -->
-        <div class="desktop-key-guide">
-          <div class="key-guide-pill pill-any"><kbd>ANY KEY</kbd> 猛烈連打</div>
-          <div class="key-guide-pill pill-space"><kbd>SPACE</kbd> 防壁突破</div>
-          <div class="key-guide-pill pill-shift"><kbd>SHIFT</kbd> 加速バイパス</div>
-          <div class="key-guide-pill pill-enter"><kbd>ENTER</kbd> ペイロード強打!!</div>
-        </div>
+
 
         <!-- Mobile Rhythm Buttons (スマホ時のみ表示) -->
         <div class="mobile-controls-row">
@@ -238,21 +257,35 @@
       <!-- Start Screen Modal -->
       <div id="start-modal" class="modal-overlay">
         <div class="modal-card">
-          <div class="modal-badge">VERSION 2.0 // CYBER RHYTHM OVERDRIVE</div>
+          <div class="modal-badge">VERSION 2.1 // CYBER RHYTHM OVERDRIVE</div>
           <h1 class="modal-title">THE HOLLYWOOD HACKER</h1>
           <p class="modal-subtitle">猛烈打鍵 × サイバーリズムハッキング</p>
 
           <div class="instructions-box">
-            <p><strong>【ゲームルール & 操作方法】</strong></p>
-            <ul>
-              <li><strong>開始時に「3・2・1・HACK!!」のカウントダウン</strong>が入ります。心の準備を整えよう！</li>
-              <li>BPM 128のサイバーBGMに合わせて、右から左の照準枠へノーツが流れてきます。</li>
-              <li><span style="color:#00ff88;">⚡ 連打ゾーン (BURST)</span>: 帯が照準枠を通過中、<strong>キーボードを猛烈に叩きまくれ！</strong></li>
-              <li><span style="color:#ffd700;">␣ SPACE (FIREWALL BREAK)</span>: 照準枠に重なった瞬間に <strong>Spaceキー</strong> を押せ！</li>
-              <li><span style="color:#cc44ff;">⇧ SHIFT (FREQUENCY BOOST)</span>: 照準枠に重なった瞬間に <strong>Shiftキー</strong> を押せ！</li>
-              <li><span style="color:#ff3366;">↵ ENTER (CRITICAL SLAM)</span>: 節目に迫る特大ノーツ！照準枠で <strong>Enterキーを強打</strong> しろ！</li>
-              <li>※指定と違うキーを叩くとペナルティ減点。映画のハッカーのようにリズムと怒涛の打鍵でSSSを狙え！</li>
-            </ul>
+            <div class="rules-summary-line">
+              BGMの拍子に合わせて右から流れるノーツが、左の照準枠 <strong>[ ]</strong> に重なったらキーを叩け！
+            </div>
+            <div class="modal-key-grid">
+              <div class="modal-key-card card-burst">
+                <div class="modal-key-badge badge-any">⚡ ANY KEY</div>
+                <div class="modal-key-text"><strong>連打ゾーン</strong>：帯が通過する間、キーを猛烈に叩きまくれ！</div>
+              </div>
+              <div class="modal-key-card card-space">
+                <div class="modal-key-badge badge-space">␣ SPACE</div>
+                <div class="modal-key-text">照準枠に重なった瞬間に <strong>Spaceキー</strong> を押せ！</div>
+              </div>
+              <div class="modal-key-card card-shift">
+                <div class="modal-key-badge badge-shift">⇧ SHIFT</div>
+                <div class="modal-key-text">上段レーンで照準枠に重なったら <strong>Shiftキー</strong>！</div>
+              </div>
+              <div class="modal-key-card card-enter">
+                <div class="modal-key-badge badge-enter">↵ ENTER</div>
+                <div class="modal-key-text">節目の特大ノーツ！照準枠で <strong>Enterキーを強打</strong>！</div>
+              </div>
+            </div>
+            <div class="rules-footer-note">
+              ※違うキーを叩くとペナルティ減点。映画のハッカーのようにリズムと怒涛の打鍵でSSSを狙え！
+            </div>
           </div>
 
           <!-- Difficulty Selector -->
@@ -261,15 +294,15 @@
             <div class="difficulty-buttons" id="diff-selector">
               <button type="button" class="diff-btn diff-btn-easy" data-diff="EASY">
                 <span class="diff-title">EASY</span>
-                <span class="diff-desc">初級 / ゆったりノーツ</span>
+                <span class="diff-desc">BPM 118 / 35秒 [Chill]</span>
               </button>
               <button type="button" class="diff-btn diff-btn-normal active" data-diff="NORMAL">
                 <span class="diff-title">NORMAL</span>
-                <span class="diff-desc">中級 / 本格ビート (標準)</span>
+                <span class="diff-desc">BPM 134 / 48秒 [Electro]</span>
               </button>
               <button type="button" class="diff-btn diff-btn-hard" data-diff="HARD">
                 <span class="diff-title">HARD</span>
-                <span class="diff-desc">上級 / 神速16分トリル</span>
+                <span class="diff-desc">BPM 165 / 56秒 [DnB]</span>
               </button>
             </div>
           </div>
@@ -286,6 +319,14 @@
       <!-- Result Screen Modal -->
       <div id="result-modal" class="modal-overlay" style="display: none;">
         <div class="modal-card">
+          <!-- Corner Back Button (難易度選択に戻る) -->
+          <button id="btn-modal-back" class="modal-corner-back-btn" title="ミッション選択に戻る" aria-label="ミッション選択に戻る">
+            <svg class="corner-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span>BACK</span>
+          </button>
+
           <h1 class="modal-title" style="color: #00ff88;">ACCESS GRANTED</h1>
           <p class="modal-subtitle" style="color: #00ffff;">MAINFRAME CORE BREACH COMPLETE // MISSION EVALUATION</p>
           <div id="result-diff-badge" class="result-diff-badge diff-normal">
@@ -336,22 +377,50 @@
             怒涛の連打と完璧な拍子取り！もはやハッキングではなくサイバー空間のオーケストラ指揮者。全米がスタンディングオベーションを送っています！
           </div>
 
-          <div class="modal-actions">
-            <button id="btn-download-png" class="btn-primary">
-              📥 認定証PNGを保存
+          <!-- Bottom Action Bar: [認定証DL] | [結果をCOPY] | [RETRY] | [X (Twitter)] -->
+          <div class="result-action-bar">
+            <!-- 認定証DL -->
+            <button id="btn-download-png" class="result-bar-btn btn-dl" title="認定証PNG画像を保存">
+              <svg class="btn-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>認定証DL</span>
             </button>
-            <button id="btn-restart" class="btn-secondary">
-              🔄 同じ難易度で再挑戦
+
+            <!-- 結果をCOPY -->
+            <button id="btn-share-copy" class="result-bar-btn btn-copy" title="結果テキストをクリップボードにコピー">
+              <svg class="btn-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>結果をCOPY</span>
             </button>
-            <button id="btn-change-diff" class="btn-secondary btn-highlight">
-              🎚️ 難易度を変更する
+
+            <!-- RETRY -->
+            <button id="btn-restart" class="result-bar-btn btn-retry" title="同じ難易度で再挑戦">
+              <svg class="btn-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              <span>RETRY</span>
             </button>
-            <button id="btn-share-copy" class="btn-secondary">
-              📋 結果をコピー
+
+            <!-- X (Twitter) SHARE -->
+            <button id="btn-x-share" class="result-bar-btn btn-x" title="X (Twitter) に認定証と定型文を投稿">
+              <svg class="btn-glyph icon-x-svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              <span>POST</span>
             </button>
           </div>
         </div>
       </div>
+
+      <!-- Cyber Toast Feedback Notification -->
+      <div id="toast-notification" class="cyber-toast" style="display: none;"></div>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

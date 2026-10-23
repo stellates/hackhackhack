@@ -2,9 +2,9 @@ import './style.css';
 import { sound } from './sound';
 import { HACKER_CODE_SNIPPETS, TERMINAL_LOGS, DRAMATIC_EVENTS, generateHexDumpLine } from './hackerData';
 import { evaluateTyping, TypingMetrics } from './evaluator';
-import { RhythmEngine, JudgmentFeedback, Difficulty } from './rhythmEngine';
+import { RhythmEngine, JudgmentFeedback, Difficulty, TRACK_CONFIGS } from './rhythmEngine';
 import { CyberRadar } from './radar';
-import { downloadReportCard } from './canvasExporter';
+import { downloadReportCard, shareReportCardToX } from './canvasExporter';
 
 enum GameState {
   START,
@@ -66,6 +66,7 @@ class HollywoodHackerGame {
   private keysCount!: HTMLElement;
   private penaltyDisplay!: HTMLElement;
   private headerDiffBadge!: HTMLElement;
+  private headerTrackInfo!: HTMLElement;
   private resultDiffBadge!: HTMLElement;
   private diffButtons: HTMLButtonElement[] = [];
   private codeStream!: HTMLElement;
@@ -91,8 +92,11 @@ class HollywoodHackerGame {
   private btnStartGame!: HTMLButtonElement;
   private btnDownloadPng!: HTMLButtonElement;
   private btnRestart!: HTMLButtonElement;
-  private btnChangeDiff!: HTMLButtonElement;
+  private btnModalBack!: HTMLButtonElement;
   private btnShareCopy!: HTMLButtonElement;
+  private btnXShare!: HTMLButtonElement;
+  private toastNotification!: HTMLElement;
+  private toastTimeoutId: number | null = null;
   private mobileHackBtn!: HTMLButtonElement;
   private mobileSpaceBtn!: HTMLButtonElement;
   private mobileShiftBtn!: HTMLButtonElement;
@@ -104,6 +108,14 @@ class HollywoodHackerGame {
     this.initRadar();
     this.setupEventListeners();
     this.fillInitialBackgroundStreams();
+    this.preloadAllTracks();
+    this.setDifficulty('NORMAL');
+  }
+
+  private preloadAllTracks(): void {
+    Object.values(TRACK_CONFIGS).forEach((track) => {
+      sound.preloadTrack(track.diff, track.primaryFile);
+    });
   }
 
   private bindDom(): void {
@@ -117,6 +129,7 @@ class HollywoodHackerGame {
     this.keysCount = document.getElementById('keys-count')!;
     this.penaltyDisplay = document.getElementById('penalty-display')!;
     this.headerDiffBadge = document.getElementById('header-diff-badge')!;
+    this.headerTrackInfo = document.getElementById('header-track-info')!;
     this.resultDiffBadge = document.getElementById('result-diff-badge')!;
     this.diffButtons = Array.from(document.querySelectorAll('.diff-btn')) as HTMLButtonElement[];
     this.codeStream = document.getElementById('code-stream')!;
@@ -142,8 +155,10 @@ class HollywoodHackerGame {
     this.btnStartGame = document.getElementById('btn-start-game') as HTMLButtonElement;
     this.btnDownloadPng = document.getElementById('btn-download-png') as HTMLButtonElement;
     this.btnRestart = document.getElementById('btn-restart') as HTMLButtonElement;
-    this.btnChangeDiff = document.getElementById('btn-change-diff') as HTMLButtonElement;
+    this.btnModalBack = document.getElementById('btn-modal-back') as HTMLButtonElement;
     this.btnShareCopy = document.getElementById('btn-share-copy') as HTMLButtonElement;
+    this.btnXShare = document.getElementById('btn-x-share') as HTMLButtonElement;
+    this.toastNotification = document.getElementById('toast-notification')!;
     this.mobileHackBtn = document.getElementById('mobile-hack-btn') as HTMLButtonElement;
     this.mobileSpaceBtn = document.getElementById('mobile-space-btn') as HTMLButtonElement;
     this.mobileShiftBtn = document.getElementById('mobile-shift-btn') as HTMLButtonElement;
@@ -248,7 +263,10 @@ class HollywoodHackerGame {
     // Download PNG
     this.btnDownloadPng.addEventListener('click', () => {
       if (this.currentMetrics) {
+        sound.init();
+        sound.playLogBeep();
         downloadReportCard(this.currentMetrics);
+        this.showToast('📥 認定証PNG画像をダウンロードしました！');
       }
     });
 
@@ -258,8 +276,8 @@ class HollywoodHackerGame {
       this.startCountdown();
     });
 
-    // Change Difficulty Button (Return to Level Selection)
-    this.btnChangeDiff.addEventListener('click', () => {
+    // Top-Left Back Button (Return to Mission/Difficulty Selection)
+    this.btnModalBack.addEventListener('click', () => {
       sound.init();
       sound.playLogBeep();
       this.resetGame();
@@ -267,41 +285,77 @@ class HollywoodHackerGame {
       this.startModal.style.display = 'flex';
     });
 
-    // Share / Copy button
+    // Share / Copy button (Result text to clipboard)
     this.btnShareCopy.addEventListener('click', () => {
       if (!this.currentMetrics) return;
-      const text = `【THE HOLLYWOOD HACKER v2.0】ハッカー適性診断\n` +
+      sound.init();
+      sound.playLogBeep();
+      const text = `【THE HOLLYWOOD HACKER】ハッカー適性診断\n` +
         `ランク: ${this.currentMetrics.rank} (${this.currentMetrics.score.toLocaleString()} PTS)\n` +
         `称号: ${this.currentMetrics.title}\n` +
-        `同期率 (SYNC): ${this.currentMetrics.syncRate}%\n` +
+        `同期率: ${this.currentMetrics.syncRate}%\n` +
         `判定: PERFECT ${this.currentMetrics.perfectCount} / GREAT ${this.currentMetrics.greatCount} / MISS ${this.currentMetrics.missCount}\n` +
         `最高打鍵速度: ${this.currentMetrics.peakKps} Keys/s\n` +
         `寸評: ${this.currentMetrics.roast}\n` +
         `#HollywoodHacker #ハッカー音ゲータイピング`;
 
       navigator.clipboard.writeText(text).then(() => {
-        const orig = this.btnShareCopy.textContent;
-        this.btnShareCopy.textContent = '✓ コピー完了！';
-        setTimeout(() => {
-          this.btnShareCopy.textContent = orig;
-        }, 2000);
+        this.showToast('📋 結果テキストをクリップボードにコピーしました！');
+      }).catch(() => {
+        this.showToast('⚠️ クリップボードへのコピーに失敗しました');
       });
+    });
+
+    // X (Twitter) Share Button (Direct Web Intent with clipboard image copy)
+    this.btnXShare.addEventListener('click', async () => {
+      if (!this.currentMetrics) return;
+      sound.init();
+      sound.playLogBeep();
+      await shareReportCardToX(this.currentMetrics);
+      this.showToast('🚀 X投稿画面を開きました！（認定証画像は Ctrl+V / ⌘V で貼り付け可能）');
     });
   }
 
+  private showToast(msg: string, duration = 3500): void {
+    if (!this.toastNotification) return;
+    this.toastNotification.textContent = msg;
+    this.toastNotification.style.display = 'flex';
+    this.toastNotification.classList.remove('show');
+    void this.toastNotification.offsetWidth; // trigger reflow
+    this.toastNotification.classList.add('show');
+
+    if (this.toastTimeoutId) clearTimeout(this.toastTimeoutId);
+    this.toastTimeoutId = window.setTimeout(() => {
+      this.toastNotification.classList.remove('show');
+      setTimeout(() => {
+        this.toastNotification.style.display = 'none';
+      }, 300);
+    }, duration);
+  }
+
   public setDifficulty(diff: Difficulty): void {
+    sound.stopTrack();
     this.selectedDifficulty = diff;
     this.rhythmEngine.setDifficulty(diff);
+    const track = this.rhythmEngine.getCurrentTrack();
+    this.durationTotal = track.duration;
+    this.timeLeft = this.durationTotal;
 
     // Update active button classes
     this.diffButtons.forEach((b) => {
       b.classList.toggle('active', b.dataset.diff === diff);
     });
 
-    // Update header badge
+    // Update header badge & track badge
     if (this.headerDiffBadge) {
       this.headerDiffBadge.textContent = diff;
       this.headerDiffBadge.className = `header-diff-badge diff-${diff.toLowerCase()}`;
+    }
+    if (this.headerTrackInfo) {
+      this.headerTrackInfo.textContent = `🎵 ${track.title} [BPM ${track.bpm}]`;
+    }
+    if (this.timerDisplay) {
+      this.timerDisplay.textContent = this.formatTime(this.timeLeft);
     }
   }
 
@@ -318,6 +372,7 @@ class HollywoodHackerGame {
   private startCountdown(): void {
     if (this.state !== GameState.START) return;
     this.state = GameState.COUNTDOWN;
+    sound.stopTrack();
 
     this.startModal.style.display = 'none';
     this.resultModal.style.display = 'none';
@@ -350,6 +405,8 @@ class HollywoodHackerGame {
 
   private actualStartGame(): void {
     this.state = GameState.PLAYING;
+    const track = this.rhythmEngine.getCurrentTrack();
+    this.durationTotal = track.duration;
     this.timeLeft = this.durationTotal;
     this.lastTimestamp = performance.now();
     this.triggeredEvents.clear();
@@ -359,8 +416,8 @@ class HollywoodHackerGame {
     this.rhythmEngine.setDifficulty(this.selectedDifficulty);
     this.clearNoteElements();
 
-    // Start Procedural Cyberpunk BGM
-    sound.startBgm();
+    // Start Track (AudioBuffer playback with procedural fallback)
+    sound.startTrack(this.selectedDifficulty);
 
     // Run game logic loop (50ms interval)
     this.timerIntervalId = window.setInterval(() => {
@@ -387,11 +444,33 @@ class HollywoodHackerGame {
     this.animFrameId = requestAnimationFrame(loop);
   }
 
+  private flashKeyFeedback(key: string): void {
+    let hudId = 'hud-key-any';
+    if (key === ' ') {
+      hudId = 'hud-key-space';
+    } else if (key === 'Shift') {
+      hudId = 'hud-key-shift';
+    } else if (key === 'Enter') {
+      hudId = 'hud-key-enter';
+    }
+
+    const hudEl = document.getElementById(hudId);
+    if (hudEl) {
+      hudEl.classList.remove('key-pressed');
+      void hudEl.offsetWidth; // trigger reflow
+      hudEl.classList.add('key-pressed');
+      window.setTimeout(() => hudEl.classList.remove('key-pressed'), 140);
+    }
+  }
+
   private handleKeystroke(key: string): void {
     const now = performance.now();
     const isEnter = key === 'Enter';
     const isShift = key === 'Shift';
     const elapsed = this.durationTotal - this.timeLeft;
+
+    // 0. Visual Key Legend HUD flash
+    this.flashKeyFeedback(key);
 
     // 1. Audio feedback
     if (isShift) {
@@ -511,6 +590,15 @@ class HollywoodHackerGame {
     // Update real-time sync rate
     const sync = this.rhythmEngine.getSyncRate();
     this.syncVal.textContent = `${sync}%`;
+
+    // If this was the final note of the song, trigger finish after a brief dramatic punch
+    if (j.isLastNote) {
+      setTimeout(() => {
+        if (this.state === GameState.PLAYING) {
+          this.finishGame();
+        }
+      }, 500);
+    }
   }
 
   private showJudgmentPop(text: string, className: string): void {
@@ -558,12 +646,11 @@ class HollywoodHackerGame {
           if (!el) {
             el = document.createElement('div');
             el.className = 'rhythm-note-item note-type-burst';
-            el.innerHTML = `<span>⚡ ${note.label} [連打!!]</span>`;
             this.rhythmNotesMain.appendChild(el);
             this.noteElements.set(note.id, el);
           }
           el.style.width = `${Math.round(noteWidth)}px`;
-          el.style.transform = `translate3d(${Math.round(noteStart)}px, -50%, 0)`;
+          el.style.transform = `translate3d(${Math.round(noteStart)}px, 0, 0)`;
 
           // Check if target zone is inside this active burst
           if (noteStart <= targetX && noteRight >= targetX) {
@@ -571,8 +658,8 @@ class HollywoodHackerGame {
           }
         }
       } else if (note.lane === 'SHIFT') {
-        // SHIFT Note flowing on the Shift Sublane
-        const noteWidth = 78;
+        // SHIFT Note - Solid Neon Purple block without text
+        const noteWidth = 56;
         const noteCenter = targetX + (note.targetTime - elapsed) * speed;
         const noteLeft = noteCenter - noteWidth / 2;
 
@@ -582,11 +669,10 @@ class HollywoodHackerGame {
           if (!el) {
             el = document.createElement('div');
             el.className = 'rhythm-note-item note-type-shift';
-            el.innerHTML = '<span>⇧ SHIFT</span>';
             this.rhythmNotesShift.appendChild(el);
             this.noteElements.set(note.id, el);
           }
-          el.style.transform = `translate3d(${Math.round(noteLeft)}px, -50%, 0)`;
+          el.style.transform = `translate3d(${Math.round(noteLeft)}px, 0, 0)`;
 
           const dist = noteCenter - targetX;
           if (dist > 0 && dist <= 200) {
@@ -597,9 +683,9 @@ class HollywoodHackerGame {
           }
         }
       } else {
-        // SPACE or ENTER note flowing on the Main Highway
+        // SPACE (Gold) or ENTER (Red) solid block without text
         const isEnterNote = note.type === 'ENTER';
-        const noteWidth = isEnterNote ? 116 : 86;
+        const noteWidth = isEnterNote ? 84 : 64;
         const noteCenter = targetX + (note.targetTime - elapsed) * speed;
         const noteLeft = noteCenter - noteWidth / 2;
 
@@ -609,16 +695,11 @@ class HollywoodHackerGame {
           if (!el) {
             el = document.createElement('div');
             el.className = `rhythm-note-item note-type-${note.type.toLowerCase()}`;
-            if (note.type === 'SPACE') {
-              el.innerHTML = '<span>␣ SPACE</span>';
-            } else if (note.type === 'ENTER') {
-              el.innerHTML = '<span>↵ ENTER</span>';
-            }
             this.rhythmNotesMain.appendChild(el);
             this.noteElements.set(note.id, el);
           }
 
-          el.style.transform = `translate3d(${Math.round(noteLeft)}px, -50%, 0)`;
+          el.style.transform = `translate3d(${Math.round(noteLeft)}px, 0, 0)`;
 
           if (isEnterNote) {
             const dist = noteCenter - targetX;
@@ -712,18 +793,18 @@ class HollywoodHackerGame {
       this.phaseBanner.className = 'current-phase-banner';
       if (nextInfo.note.type === 'SPACE') {
         this.phaseIcon.textContent = '␣';
-        this.phaseText.textContent = `NEXT: SPACE [防壁突破] (あと ${sec}秒)`;
+        this.phaseText.textContent = `NEXT: SPACE (あと ${sec}s)`;
       } else if (nextInfo.note.type === 'SHIFT') {
         this.phaseIcon.textContent = '⇧';
-        this.phaseText.textContent = `NEXT: SHIFT [周波数加速] (あと ${sec}秒)`;
+        this.phaseText.textContent = `NEXT: SHIFT (あと ${sec}s)`;
       } else if (nextInfo.note.type === 'ENTER') {
         this.phaseIcon.textContent = '↵';
-        this.phaseText.textContent = `NEXT: ENTER [ペイロード強打] (あと ${sec}秒)`;
+        this.phaseText.textContent = `NEXT: ENTER (あと ${sec}s)`;
       }
     } else {
       this.phaseBanner.className = 'current-phase-banner';
       this.phaseIcon.textContent = '🎯';
-      this.phaseText.textContent = 'TARGET: SPACE / SHIFT / ENTER を狙え！';
+      this.phaseText.textContent = 'STANDBY: 連打またはノーツ待機';
     }
   }
 
@@ -792,6 +873,14 @@ class HollywoodHackerGame {
     setTimeout(() => flash.remove(), 1000);
   }
 
+  private formatTime(seconds: number): string {
+    const s = Math.max(0, seconds);
+    const totalMs = Math.floor(s * 100);
+    const sec = Math.floor(totalMs / 100);
+    const ms = totalMs % 100;
+    return `00:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+  }
+
   private updateTimer(): void {
     const now = performance.now();
     const delta = (now - this.lastTimestamp) / 1000;
@@ -809,10 +898,7 @@ class HollywoodHackerGame {
     }
 
     // Format mm:ss.ms
-    const totalMs = Math.floor(this.timeLeft * 100);
-    const sec = Math.floor(totalMs / 100);
-    const ms = totalMs % 100;
-    this.timerDisplay.textContent = `00:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+    this.timerDisplay.textContent = this.formatTime(this.timeLeft);
 
     // Intrusion progress calculation (0 - 100%)
     const timeProgress = (this.durationTotal - this.timeLeft) / this.durationTotal;
@@ -876,8 +962,9 @@ class HollywoodHackerGame {
     }
     this.state = GameState.FINISHED;
 
-    // Stop BGM and play grand fanfare
-    sound.stopBgm();
+    // Keep BGM track flowing to the end of the song into the result screen,
+    // ducking slightly so the ACCESS GRANTED fanfare shines.
+    sound.duckBgmForResults();
     sound.playAccessGranted();
 
     // Calculate metrics with rhythm evaluation
@@ -957,7 +1044,7 @@ class HollywoodHackerGame {
       clearInterval(this.countdownTimerId);
       this.countdownTimerId = null;
     }
-    sound.stopBgm();
+    sound.stopTrack();
 
     this.state = GameState.START;
     this.timeLeft = this.durationTotal;
@@ -980,7 +1067,7 @@ class HollywoodHackerGame {
 
     // Clear UI
     this.codeStream.textContent = '';
-    this.timerDisplay.textContent = '00:30.00';
+    this.timerDisplay.textContent = this.formatTime(this.durationTotal);
     this.progressBar.style.width = '0%';
     this.progressText.textContent = '0%';
     this.syncVal.textContent = '100%';
