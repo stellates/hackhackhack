@@ -37,6 +37,13 @@ export interface TrackConfig {
   primaryFile: string;
 }
 
+const resolveAssetPath = (relativeFile: string): string => {
+  const base = import.meta.env.BASE_URL || './';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
+  const cleanPath = relativeFile.replace(/^\.?\//, '');
+  return `${cleanBase}${cleanPath}`;
+};
+
 export const TRACK_CONFIGS: Record<Difficulty, TrackConfig> = {
   EASY: {
     diff: 'EASY',
@@ -44,7 +51,7 @@ export const TRACK_CONFIGS: Record<Difficulty, TrackConfig> = {
     artist: 'GEMINI LYRIA',
     bpm: 118,
     duration: 35.0,
-    primaryFile: '/audio/easy.mp3'
+    primaryFile: resolveAssetPath('audio/easy.mp3')
   },
   NORMAL: {
     diff: 'NORMAL',
@@ -52,7 +59,7 @@ export const TRACK_CONFIGS: Record<Difficulty, TrackConfig> = {
     artist: 'GEMINI LYRIA',
     bpm: 134,
     duration: 48.0,
-    primaryFile: '/audio/normal.mp3'
+    primaryFile: resolveAssetPath('audio/normal.mp3')
   },
   HARD: {
     diff: 'HARD',
@@ -60,7 +67,7 @@ export const TRACK_CONFIGS: Record<Difficulty, TrackConfig> = {
     artist: 'GEMINI LYRIA',
     bpm: 165,
     duration: 56.0,
-    primaryFile: '/audio/hard.mp3'
+    primaryFile: resolveAssetPath('audio/hard.mp3')
   }
 };
 

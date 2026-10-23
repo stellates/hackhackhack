@@ -86,23 +86,43 @@ class SoundManager {
     return this.isUsingAudioFile;
   }
 
-  /** Preloads audio track for specified difficulty */
+  /** Preloads audio track for specified difficulty with resilient fallback paths */
   public async preloadTrack(diff: string, filePath: string): Promise<boolean> {
     this.init();
     if (!this.ctx) return false;
 
-    const res = await fetch(filePath).catch(() => null);
-    if (res && res.ok) {
+    const baseClean = (import.meta.env.BASE_URL || './').replace(/\/$/, '');
+    const fileClean = filePath.replace(/^\.?\//, '');
+    
+    // Unique list of path candidates to handle GitHub Pages subfolders & root deployments
+    const candidatePaths = Array.from(new Set([
+      filePath,
+      `./${fileClean}`,
+      fileClean,
+      `${baseClean}/${fileClean}`,
+      `/${fileClean}`
+    ]));
+
+    for (const testPath of candidatePaths) {
       try {
-        const arrayBuf = await res.arrayBuffer();
-        const audioBuf = await this.ctx.decodeAudioData(arrayBuf);
-        this.trackBuffers.set(diff, audioBuf);
-        console.log(`[SoundManager] Loaded track for ${diff} from ${filePath} (${audioBuf.duration.toFixed(1)}s)`);
-        return true;
-      } catch (err) {
-        console.warn(`[SoundManager] Failed to decode audio from ${filePath}:`, err);
+        const res = await fetch(testPath);
+        if (res.ok) {
+          const contentType = res.headers.get('content-type') || '';
+          // Ensure we didn't receive a 200 HTML fallback page from SPA router
+          if (contentType.includes('text/html')) continue;
+
+          const arrayBuf = await res.arrayBuffer();
+          const audioBuf = await this.ctx.decodeAudioData(arrayBuf);
+          this.trackBuffers.set(diff, audioBuf);
+          console.log(`[SoundManager] Loaded track for ${diff} from ${testPath} (${audioBuf.duration.toFixed(1)}s)`);
+          return true;
+        }
+      } catch {
+        // Continue to next candidate
       }
     }
+
+    console.warn(`[SoundManager] Could not load audio track for ${diff} from candidates:`, candidatePaths);
     return false;
   }
 
